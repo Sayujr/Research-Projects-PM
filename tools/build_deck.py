@@ -220,7 +220,7 @@ def add_chrome(slide, slide_num, title_text, eyebrow=None):
                 DECK_TITLE, size=9, color=MUTED, line_spacing=1.0)
     add_textbox(slide, SLIDE_W - MARGIN - Inches(2), Inches(7.12),
                 Inches(2), Inches(0.25),
-                f"{slide_num} / 6", size=9, color=MUTED,
+                f"{slide_num} / 7", size=9, color=MUTED,
                 align=PP_ALIGN.RIGHT, line_spacing=1.0)
 
 
@@ -1519,6 +1519,129 @@ def build_slide_6(prs):
                           grid_y0 + card_h + gutter_y, card_w, card_h)
 
 
+# ---------- slide 7: Try it live ----------
+
+def build_slide_7(prs):
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    add_chrome(slide, 7, "Try the live demo",
+               eyebrow="Try it")
+
+    add_textbox(slide, MARGIN, Inches(1.42),
+                Inches(12.33), Inches(0.5),
+                "Click through the actual pages the deck has been showing. "
+                "Everything is editable in your browser. Nothing you do here touches a real account.",
+                size=12, color=MUTED, line_spacing=1.2)
+
+    # ----- big URL box -----
+    url_y = Inches(2.0)
+    url_h = Inches(1.05)
+    url_w = Inches(12.33)
+    url_x = MARGIN
+
+    add_rrect(slide, url_x, url_y, url_w, url_h,
+              fill=NAVY, line_color=None)
+
+    add_textbox(slide, url_x + Inches(0.3), url_y + Inches(0.12),
+                Inches(4), Inches(0.22),
+                "OPEN ON PHONE OR LAPTOP", size=9, bold=True,
+                color=tint(TEAL, 0.4), line_spacing=1.0)
+
+    add_textbox(slide, url_x + Inches(0.3), url_y + Inches(0.35),
+                url_w - Inches(0.6), Inches(0.55),
+                "https://sayujr.github.io/Research-Projects-PM/",
+                size=26, bold=True, color=WHITE,
+                line_spacing=1.0, font="Consolas")
+
+    add_textbox(slide, url_x + Inches(0.3), url_y + Inches(0.85),
+                url_w - Inches(0.6), Inches(0.2),
+                "Hosted on GitHub Pages from the same repo. Auto-rebuilds on every commit.",
+                size=10, color=tint(TEAL, 0.4), line_spacing=1.0)
+
+    # ----- Two columns: what to try  //  how to set it up -----
+    col_top = Inches(3.3)
+    col_h = Inches(3.1)
+    col_w = (SLIDE_W - 2 * MARGIN - Inches(0.3)) / 2
+    left_x = MARGIN
+    right_x = MARGIN + col_w + Inches(0.3)
+
+    # LEFT: what to try
+    add_rrect(slide, left_x, col_top, col_w, col_h,
+              fill=CARD_BG, line_color=LINE, line_width=Pt(0.75))
+    add_textbox(slide, left_x + Inches(0.3), col_top + Inches(0.2),
+                col_w - Inches(0.6), Inches(0.25),
+                "WHAT TO TRY IN THE DEMO",
+                size=9, bold=True, color=TEAL, line_spacing=1.0)
+    add_textbox(slide, left_x + Inches(0.3), col_top + Inches(0.45),
+                col_w - Inches(0.6), Inches(0.3),
+                "Each page is live and editable in your browser.",
+                size=11, color=MUTED, line_spacing=1.0)
+
+    try_items = [
+        ("Plan Board",
+         "Drag \u201cMethods revise\u201d to a different day. See the cascade preview before saving.",
+         DEEP),
+        ("Project page",
+         "Click any text to edit. Add a checkpoint. Move KR sliders. Log a win.",
+         LAB),
+        ("People",
+         "Add items to \u201cSara owes me.\u201d The 1:1 agenda rebuilds live.",
+         MEETING),
+        ("Report",
+         "Pick a project and audience. Toggle preview / markdown / email. Print to PDF.",
+         GREEN),
+        ("Gantt",
+         "Click a bar. Switch between projects.",
+         AMBER),
+    ]
+    ly = col_top + Inches(0.85)
+    for label, body, color in try_items:
+        add_dot(slide, left_x + Inches(0.4), ly + Inches(0.14),
+                Inches(0.16), color)
+        add_textbox(slide, left_x + Inches(0.65), ly + Inches(0.02),
+                    Inches(1.5), Inches(0.25),
+                    label, size=11, bold=True, color=NAVY, line_spacing=1.0)
+        add_textbox(slide, left_x + Inches(2.2), ly + Inches(0.02),
+                    col_w - Inches(2.4), Inches(0.5),
+                    body, size=10, color=INK, line_spacing=1.3)
+        ly += Inches(0.42)
+
+    # RIGHT: how to set up on your laptop
+    add_rrect(slide, right_x, col_top, col_w, col_h,
+              fill=CARD_BG, line_color=LINE, line_width=Pt(0.75))
+    add_textbox(slide, right_x + Inches(0.3), col_top + Inches(0.2),
+                col_w - Inches(0.6), Inches(0.25),
+                "TO SET UP ON YOUR LAPTOP",
+                size=9, bold=True, color=TEAL, line_spacing=1.0)
+    add_textbox(slide, right_x + Inches(0.3), col_top + Inches(0.45),
+                col_w - Inches(0.6), Inches(0.3),
+                "One paste. Claude does the rest.",
+                size=11, color=MUTED, line_spacing=1.0)
+
+    steps = [
+        ("1", "Install Claude Code", "claude.ai/code  (free)"),
+        ("2", "Open any terminal", "run:   claude"),
+        ("3", "Paste the setup prompt", "\u2192 research-pm.../setup.html"),
+        ("4", "Have a 5-min onboarding chat", "stage 1 of 8 — role + year goals"),
+    ]
+    sy = col_top + Inches(0.85)
+    for num, label, sub in steps:
+        # number circle
+        add_dot(slide, right_x + Inches(0.4), sy + Inches(0.2),
+                Inches(0.32), TEAL)
+        add_textbox(slide, right_x + Inches(0.24), sy + Inches(0.08),
+                    Inches(0.32), Inches(0.25),
+                    num, size=12, bold=True, color=WHITE,
+                    align=PP_ALIGN.CENTER, line_spacing=1.0)
+        add_textbox(slide, right_x + Inches(0.8), sy + Inches(0.02),
+                    col_w - Inches(1.0), Inches(0.25),
+                    label, size=12, bold=True, color=NAVY, line_spacing=1.0)
+        add_textbox(slide, right_x + Inches(0.8), sy + Inches(0.24),
+                    col_w - Inches(1.0), Inches(0.3),
+                    sub, size=10, color=MUTED, line_spacing=1.0,
+                    font="Consolas" if num in ("2",) else FONT)
+        sy += Inches(0.57)
+
+
 # ---------- main ----------
 
 def build(out_name="PRESENTATION.pptx"):
@@ -1532,6 +1655,7 @@ def build(out_name="PRESENTATION.pptx"):
     build_slide_4(prs)
     build_slide_5(prs)
     build_slide_6(prs)
+    build_slide_7(prs)
 
     out = Path(__file__).resolve().parent.parent / out_name
     prs.save(out)

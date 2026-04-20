@@ -349,10 +349,19 @@ tags: [paper, cell-reports]</div>
     });
   });
 
-  renderCheckpoints();
-  renderBlockers();
-  renderKRs();
-  renderRecentLog();
+  function renderAll() {
+    // Re-populate editable fields whose initial value is now stale.
+    document.querySelectorAll('.editable[data-key]').forEach(el => {
+      const v = state.project[el.dataset.key];
+      if (v && el.textContent.trim() !== v) el.textContent = v;
+    });
+    renderCheckpoints();
+    renderBlockers();
+    renderKRs();
+    renderRecentLog();
+  }
+  renderAll();
+  window.addEventListener('state:hydrated', renderAll);
 </script>
 
 </body>

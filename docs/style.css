@@ -106,6 +106,10 @@ code, pre { font-family: var(--mono); font-size: 12px; }
   border-radius: var(--r-sm);
 }
 
+/* Live/demo data source indicator (set by app.js after hydrateFromLive). */
+body.live-data .nav .demo-tag { background: var(--green); }
+body.seed-data .nav .demo-tag { background: var(--teal); }
+
 /* ---------- page + headings ---------- */
 
 main {

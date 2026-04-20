@@ -140,14 +140,26 @@ async function hydrateFromLive() {
     }
     // Transform live shape into the shape app.js expects.
     state = mergeLiveIntoState(live);
-    window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'live' } }));
     document.body.classList.add('live-data');
+    updateDataSourceTag('LIVE', live.generated_at);
+    window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'live' } }));
     return { source: 'live', state };
   } catch (e) {
     // No data.json yet (fresh install, or offline). Seed data is fine.
-    window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'seed' } }));
     document.body.classList.add('seed-data');
+    updateDataSourceTag('SEED');
+    window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'seed' } }));
     return { source: 'seed', state };
+  }
+}
+
+function updateDataSourceTag(label, generatedAt) {
+  const tag = document.querySelector('.nav .demo-tag');
+  if (!tag) return;
+  tag.textContent = label;
+  if (generatedAt) {
+    const d = new Date(generatedAt);
+    tag.title = `Built ${d.toLocaleString()}`;
   }
 }
 

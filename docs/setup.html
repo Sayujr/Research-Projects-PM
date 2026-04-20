@@ -121,32 +121,34 @@
 <pre id="promptText">Set up research-pm for me on this machine.
 
 Steps:
-1. Clone https://github.com/OWNER/Research-Projects-PM.git into ~/research-pm
-   (pick a sensible location if that's taken; confirm with me first).
+1. Clone https://github.com/Sayujr/Research-Projects-PM.git into
+   ~/research-pm (pick another location if that's taken; confirm with me).
 2. cd into the cloned repo.
-3. Read CLAUDE.md so you understand the philosophy, slash commands, and tone.
-   Load the principles (six design rules) and the goal cascade (year → quarter
-   → project → week → today) into working memory.
-4. Confirm the six design rules back to me in one paragraph, plainly, so I
+3. Read CLAUDE.md so you load the six design rules, the goal cascade
+   (year → quarter → project → week → today), the priority order
+   (deadlines &gt; writing &gt; unblock team &gt; perishable lab &gt; experiments
+   &gt; admin), and the tone rules.
+4. Confirm the six design rules back to me in one short paragraph so I
    know you've loaded them.
-5. Start the onboarding interview (stage 1 of 8: role + year goals). Run it
-   conversationally, one question at a time — do not dump all 8 stages at once.
-   Spread the rest of the stages over future sessions.
-6. After stage 1, commit any new files (e.g. goals.md scaffolding) locally.
-   Do not push to GitHub without asking me.
+5. Start the /onboard slash command — stage 1 (role + year goals). Run
+   conversationally, one question at a time. Do not dump all 8 stages at
+   once. Spread the remaining 7 stages over future sessions.
+6. After stage 1, commit locally (push only if I ask). The SessionStart
+   hook in .claude/settings.json will auto-fire /standup on future
+   session starts.
 
-From now on:
-- Every new session: run /standup automatically (SessionStart hook should do
-  this; if it doesn't, run /standup manually).
-- When I log work, append to progress/YYYY-MM.md with the date, project,
-  note, and duration if I gave one. Never lose a duration estimate —
-  it feeds meta/task-history.json.
-- When I ask anything project-management-related, decide on my behalf
-  following the fixed priority order (deadlines &gt; writing &gt; unblock team
-  &gt; perishable lab &gt; experiments &gt; admin). Only ask when the choice is
-  genuinely mine alone.
+Behaviour from here on:
+- Every new session: /standup runs automatically via the SessionStart hook
+  (checks .claude/last-standup). If the hook doesn't fire, run /standup
+  manually.
+- When I log work, use /logwin — it appends to progress/YYYY-MM.md with
+  the date, project, note, and duration (if I gave one), then updates
+  meta/task-history.json for duration learning. Never lose a duration.
+- Decide on my behalf. Only ask when the choice is genuinely mine.
 - Keep responses short unless I ask for depth. Evidence-based praise only.
   No "great work" without naming what actually shipped.
+- Follow the output format specs in .claude/commands/&lt;name&gt;.md exactly
+  — no ad-lib formatting.
 
 Ready? Start with step 1.</pre>
       </div>

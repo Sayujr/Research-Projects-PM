@@ -291,9 +291,13 @@
     `).join('');
   }
 
-  renderPeople();
-  renderAgenda();
-  renderStale();
+  function renderAll() {
+    renderPeople();
+    renderAgenda();
+    renderStale();
+  }
+  renderAll();
+  window.addEventListener('state:hydrated', renderAll);
 </script>
 
 </body>

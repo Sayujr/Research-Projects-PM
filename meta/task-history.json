@@ -1,0 +1,9 @@
+{
+  "figure_draft":     {"median_min": 140, "p90_min": 210, "n": 8,  "samples": [135, 140, 155, 120, 180, 210, 125, 145]},
+  "methods_section":  {"median_min": 270, "p90_min": 360, "n": 4,  "samples": [240, 270, 290, 360]},
+  "results_section":  {"median_min": 180, "p90_min": 240, "n": 3,  "samples": [150, 180, 240]},
+  "intro_section":    {"median_min": 105, "p90_min": 150, "n": 2,  "samples": [90, 150]},
+  "passage_routine":  {"median_min":  45, "p90_min":  75, "n": 23, "samples": [30, 40, 45, 45, 50, 60, 75, 45, 40, 50, 45]},
+  "dose_response":    {"median_min": 360, "p90_min": 480, "n": 6,  "samples": [300, 360, 360, 420, 480, 330]},
+  "grant_section":    {"median_min": 240, "p90_min": 330, "n": 3,  "samples": [210, 240, 330]}
+}

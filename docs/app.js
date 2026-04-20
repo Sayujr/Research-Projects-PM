@@ -90,30 +90,99 @@ const SEED_STATE = {
 };
 
 const STORAGE_KEY = 'research-pm-demo-v1';
+const LIVE_DATA_URL = 'data.json';
 
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return structuredClone(SEED_STATE);
-    return JSON.parse(raw);
-  } catch (e) {
-    return structuredClone(SEED_STATE);
-  }
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return structuredClone(SEED_STATE);
 }
 
 function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
+  } catch {
     console.warn('localStorage unavailable; edits will not persist this session.');
   }
 }
 
 function resetAll() {
-  if (!confirm('Reset all demo data back to seed? Your edits will be lost.')) return;
+  if (!confirm('Reset all demo data back to seed / live data? Your edits will be lost.')) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
 }
 
+/**
+ * Hydrate from docs/data.json if available.
+ *
+ * data.json is produced by tools/build-data.js (GH Action on every push).
+ * If it's present AND the user has not edited anything locally (no
+ * STORAGE_KEY in localStorage), overwrite state with live data so the
+ * site reflects the real repo. Otherwise, respect the user's edits.
+ *
+ * After hydration, fires a `state:hydrated` CustomEvent so pages can
+ * re-render if they want to.
+ */
+async function hydrateFromLive() {
+  try {
+    const res = await fetch(LIVE_DATA_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const live = await res.json();
+
+    // Merge strategy: if the user has a saved localStorage state, keep
+    // it (they've been editing). Otherwise, take live data.
+    const hasLocalEdits = localStorage.getItem(STORAGE_KEY) !== null;
+    if (hasLocalEdits) {
+      window.__liveData = live;  // exposed for a manual "pull live" button
+      return { source: 'local', state };
+    }
+    // Transform live shape into the shape app.js expects.
+    state = mergeLiveIntoState(live);
+    window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'live' } }));
+    document.body.classList.add('live-data');
+    return { source: 'live', state };
+  } catch (e) {
+    // No data.json yet (fresh install, or offline). Seed data is fine.
+    window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'seed' } }));
+    document.body.classList.add('seed-data');
+    return { source: 'seed', state };
+  }
+}
+
+function mergeLiveIntoState(live) {
+  // Pick the first active project as the "focus" project for project.html.
+  const primary = (live.projects || []).find((p) => p.status === 'active') ||
+                  live.projects?.[0] ||
+                  SEED_STATE.project;
+
+  const krs = (primary.krs || SEED_STATE.project.krs || []).slice();
+
+  return {
+    today: live.today || SEED_STATE.today,
+    project: {
+      id: primary.id || SEED_STATE.project.id,
+      title: primary.title || primary.id || SEED_STATE.project.title,
+      tagline: primary.goal || SEED_STATE.project.tagline,
+      objective: primary.objective || SEED_STATE.project.objective,
+      krs,
+      checkpoints: primary.checkpoints || [],
+      blockers: primary.blockers || [],
+      recentLog: (live.progress || []).filter((l) => l.project === primary.id).slice(0, 5),
+    },
+    people: live.people && live.people.length ? live.people : SEED_STATE.people,
+    progressLog: live.progress || SEED_STATE.progressLog,
+    goals: live.goals || null,
+    stats: live.stats || null,
+    weekPlan: live.weekPlan || null,
+    _liveMeta: { generated_at: live.generated_at, week: live.week },
+  };
+}
+
 // Global state, usable from every page.
 let state = loadState();
+
+// Kick off hydration. Pages that care about the refresh can listen for
+// `state:hydrated` and call their render function again.
+hydrateFromLive();

@@ -1,0 +1,634 @@
+{
+  "generated_at": "2026-04-20T16:00:11.672Z",
+  "today": "2026-04-20",
+  "week": "2026-W17",
+  "projects": [
+    {
+      "id": "organoid",
+      "title": "Organoid model",
+      "status": "active",
+      "goalModel": "narrative",
+      "deadline": "2026-12-31",
+      "priority": 2,
+      "collaborators": [
+        "sara"
+      ],
+      "team": [
+        "sara",
+        "jim"
+      ],
+      "tags": [
+        "organoid",
+        "method-development"
+      ],
+      "checkpoints": [
+        {
+          "name": "Media v2 protocol",
+          "date": "2026-04-18",
+          "dod": "reliable across 6 passages",
+          "status": "done"
+        },
+        {
+          "name": "Cell type B stable",
+          "date": "2026-04-30",
+          "dod": "contamination-free across 3 consecutive weeks",
+          "status": "todo"
+        },
+        {
+          "name": "Doubling time characterised",
+          "date": "2026-05-15",
+          "dod": "data for both cell types with SE < 10%",
+          "status": "todo"
+        },
+        {
+          "name": "Failure mode catalogue",
+          "date": "2026-06-15",
+          "dod": "top 5 failures documented with root cause",
+          "status": "todo"
+        },
+        {
+          "name": "Ready for assay",
+          "date": "2026-09-30",
+          "dod": "protocol reviewed by 1 external researcher",
+          "status": "todo"
+        }
+      ],
+      "blockers": [
+        {
+          "text": "Cell type B contamination traced to shared incubator — isolation plan pending equipment availability."
+        }
+      ],
+      "goal": "Establish a reliable organoid model for subsequent assays — baseline",
+      "rawSections": {
+        "Goal": "Establish a reliable organoid model for subsequent assays — baseline\nmedia protocol working, two cell types validated, doubling time\ncharacterised, failure modes documented.",
+        "Checkpoints": "- [x] **Media v2 protocol** — 2026-04-18. DoD: reliable across 6 passages.\n- [ ] **Cell type B stable** — 2026-04-30. DoD: contamination-free across 3 consecutive weeks.\n- [ ] **Doubling time characterised** — 2026-05-15. DoD: data for both cell types with SE < 10%.\n- [ ] **Failure mode catalogue** — 2026-06-15. DoD: top 5 failures documented with root cause.\n- [ ] **Ready for assay** — 2026-09-30. DoD: protocol reviewed by 1 external researcher.",
+        "Lab work": "Daily maintenance MWF. Media v2 stable — 6 consecutive clean passages.",
+        "Paper / writing": "Not yet drafting. Method notes accumulating in lab notebook.",
+        "Meetings": "Monthly sync with Sara. Quarterly check-in with PI.",
+        "Blockers": "- Cell type B contamination traced to shared incubator — isolation plan\n  pending equipment availability.",
+        "Notes": "Consider rotating cell type B to a different incubator to isolate the\ncontamination variable. Check with Jim on incubator schedule."
+      }
+    },
+    {
+      "id": "r01-renewal",
+      "title": "R01 renewal",
+      "status": "active",
+      "goalModel": "okr",
+      "deadline": "2026-08-01",
+      "priority": 1,
+      "collaborators": [
+        "prof-smith"
+      ],
+      "team": [],
+      "tags": [
+        "grant",
+        "r01",
+        "renewal"
+      ],
+      "checkpoints": [
+        {
+          "name": "Aim 1 outline",
+          "date": "2026-04-10",
+          "dod": "preliminary results summarised",
+          "status": "done"
+        },
+        {
+          "name": "Aim 3 outline",
+          "date": "2026-04-17",
+          "dod": "conceptual framework + gaps identified",
+          "status": "done"
+        },
+        {
+          "name": "Preliminary data for Aim 3",
+          "date": "2026-05-30",
+          "dod": "2 supporting figures",
+          "status": "todo"
+        },
+        {
+          "name": "Full Aim 3 draft",
+          "date": "2026-06-30",
+          "dod": "1500 words, figures integrated",
+          "status": "todo"
+        },
+        {
+          "name": "Full draft (all aims)",
+          "date": "2026-07-20",
+          "dod": "complete sections + budget",
+          "status": "todo"
+        },
+        {
+          "name": "Submission",
+          "date": "2026-08-01",
+          "dod": "ERA Commons uploaded + confirmed",
+          "status": "todo"
+        }
+      ],
+      "blockers": [],
+      "goal": "Submit R01 renewal by Aug 1, 2026 with strong preliminary data for Aim 3.",
+      "rawSections": {
+        "Goal": "Submit R01 renewal by Aug 1, 2026 with strong preliminary data for Aim 3.",
+        "Checkpoints": "- [x] **Aim 1 outline** — 2026-04-10. DoD: preliminary results summarised.\n- [x] **Aim 3 outline** — 2026-04-17. DoD: conceptual framework + gaps identified.\n- [ ] **Preliminary data for Aim 3** — 2026-05-30. DoD: 2 supporting figures.\n- [ ] **Full Aim 3 draft** — 2026-06-30. DoD: 1500 words, figures integrated.\n- [ ] **Full draft (all aims)** — 2026-07-20. DoD: complete sections + budget.\n- [ ] **Submission** — 2026-08-01. DoD: ERA Commons uploaded + confirmed.",
+        "Lab work": "Aim 3 preliminary experiments scheduled for May — 6-week runway.",
+        "Paper / writing": "Aim 3 outline drafted (2026-04-17). Rest pending prelim data.",
+        "Meetings": "Weekly check-in with Prof Smith on grant status. Administrative\npre-submission review 2 weeks before deadline.",
+        "Blockers": "None currently.",
+        "Notes": "Last R01 submission's reviewer feedback focused on Aim 3 weakness —\nthis renewal's strategy is to lead with stronger prelim data there."
+      }
+    },
+    {
+      "id": "tnf-paper",
+      "title": "TNF paper",
+      "status": "active",
+      "goalModel": "okr",
+      "deadline": "2026-10-31",
+      "priority": 1,
+      "collaborators": [
+        "prof-smith",
+        "sara",
+        "ravi"
+      ],
+      "team": [
+        "sara",
+        "ravi"
+      ],
+      "tags": [
+        "paper",
+        "cell-reports",
+        "tnf"
+      ],
+      "checkpoints": [
+        {
+          "name": "Intro drafted",
+          "date": "2026-04-08",
+          "dod": "1500 words, all citations in",
+          "status": "done"
+        },
+        {
+          "name": "Methods drafted",
+          "date": "2026-04-30",
+          "dod": "2000 words, protocol refs included",
+          "status": "todo"
+        },
+        {
+          "name": "Results drafted",
+          "date": "2026-05-15",
+          "dod": "numbers + structure + figure legends",
+          "status": "todo"
+        },
+        {
+          "name": "Figures v3",
+          "date": "2026-05-31",
+          "dod": "6 of 6 panels finalised",
+          "status": "todo"
+        },
+        {
+          "name": "Co-author review",
+          "date": "2026-06-15",
+          "dod": "all replies incorporated",
+          "status": "todo"
+        },
+        {
+          "name": "Revisions complete",
+          "date": "2026-07-31",
+          "dod": "responses drafted to anticipated questions",
+          "status": "todo"
+        },
+        {
+          "name": "Submission",
+          "date": "2026-09-30",
+          "dod": "all journal requirements met, cover letter done",
+          "status": "todo"
+        }
+      ],
+      "blockers": [
+        {
+          "text": "Antibody reorder pending — ETA 2026-04-28. Figure 4 v1 blocked until then."
+        }
+      ],
+      "goal": "First-author submission to *Cell Reports* by Oct 2026 on TNF-HUVEC",
+      "rawSections": {
+        "Goal": "First-author submission to *Cell Reports* by Oct 2026 on TNF-HUVEC\nendothelial response kinetics.",
+        "Checkpoints": "- [x] **Intro drafted** — 2026-04-08. DoD: 1500 words, all citations in.\n- [ ] **Methods drafted** — 2026-04-30. DoD: 2000 words, protocol refs included.\n- [ ] **Results drafted** — 2026-05-15. DoD: numbers + structure + figure legends.\n- [ ] **Figures v3** — 2026-05-31. DoD: 6 of 6 panels finalised.\n- [ ] **Co-author review** — 2026-06-15. DoD: all replies incorporated.\n- [ ] **Revisions complete** — 2026-07-31. DoD: responses drafted to anticipated questions.\n- [ ] **Submission** — 2026-09-30. DoD: all journal requirements met, cover letter done.",
+        "Lab work": "MCF-7 passage on Mon/Wed/Fri · Dose-response repeated with blinded analysis.",
+        "Paper / writing": "Intro + Methods complete. Results in progress. Figures 1–3 at v3, Figure 4\nnot started (blocked on antibody).",
+        "Meetings": "Weekly update to Prof Smith by Friday. Co-authors invited to review in June.",
+        "Blockers": "- Antibody reorder pending — ETA 2026-04-28. Figure 4 v1 blocked until then.",
+        "Notes": "Replicate run (Apr 16) matches primary data within 5% — ready to\nincorporate into Results section."
+      }
+    }
+  ],
+  "progress": [
+    {
+      "date": "2026-04-20",
+      "project": "tnf-paper",
+      "text": "Methods section drafted 2000 words, ready for co-author review",
+      "duration": "2h 10m"
+    },
+    {
+      "date": "2026-04-18",
+      "project": "organoid",
+      "text": "Cell type B contamination traced to shared incubator",
+      "duration": "45m"
+    },
+    {
+      "date": "2026-04-17",
+      "project": "tnf-paper",
+      "text": "Figures 1–3 finalised at v3",
+      "duration": "3h"
+    },
+    {
+      "date": "2026-04-17",
+      "project": "r01-renewal",
+      "text": "Aim 3 outline drafted, prelim data gaps identified",
+      "duration": "1h 30m"
+    },
+    {
+      "date": "2026-04-16",
+      "project": "tnf-paper",
+      "text": "Replicate run matches primary data within 5%",
+      "duration": "3h 15m"
+    },
+    {
+      "date": "2026-04-15",
+      "project": "organoid",
+      "text": "Media v2 protocol documented across 6 passages",
+      "duration": "1h"
+    },
+    {
+      "date": "2026-04-14",
+      "project": "tnf-paper",
+      "text": "Intro section polished, all citations in",
+      "duration": "1h 45m"
+    },
+    {
+      "date": "2026-04-10",
+      "project": "r01-renewal",
+      "text": "Aim 1 outline drafted, prelim results summarised",
+      "duration": "2h"
+    },
+    {
+      "date": "2026-04-10",
+      "project": "tnf-paper",
+      "text": "1:1 Sara, confirmed figure 4 ownership",
+      "duration": "30m"
+    },
+    {
+      "date": "2026-04-08",
+      "project": "tnf-paper",
+      "text": "Intro drafted to first-pass completeness",
+      "duration": "3h 30m"
+    },
+    {
+      "date": "2026-04-08",
+      "project": "organoid",
+      "text": "Media v2 protocol draft, Sara committed to review",
+      "duration": "40m"
+    }
+  ],
+  "people": [
+    {
+      "name": "Sara",
+      "role": "postdoc",
+      "cadence": "bi-weekly 1:1, last contact 2026-04-10",
+      "lastContact": "2026-04-10",
+      "projects": [
+        "tnf-paper",
+        "organoid"
+      ],
+      "owesMe": [
+        {
+          "text": "Organoid protocol v2",
+          "meta": "committed 2026-04-08, due 2026-04-22"
+        },
+        {
+          "text": "Figure 4 first draft",
+          "meta": "committed 2026-04-14, due 2026-04-30"
+        }
+      ],
+      "iOwe": [
+        {
+          "text": "Feedback on cell type B results",
+          "meta": "due 2026-04-23"
+        }
+      ],
+      "notes": "strong on imaging, interested in tool development; prefers async feedback via doc comments."
+    },
+    {
+      "name": "Ravi",
+      "role": "postdoc",
+      "cadence": "bi-weekly 1:1, last contact 2026-04-15",
+      "lastContact": "2026-04-15",
+      "projects": [
+        "tnf-paper"
+      ],
+      "owesMe": [
+        {
+          "text": "Dose-response replicate draft",
+          "meta": "committed 2026-04-10, due 2026-04-24"
+        }
+      ],
+      "iOwe": [],
+      "notes": "experienced with primary endothelial cells; prefers concise standups."
+    },
+    {
+      "name": "Jim",
+      "role": "lab tech",
+      "cadence": "weekly check-in, last contact 2026-04-13",
+      "lastContact": "2026-04-13",
+      "projects": [
+        "tnf-paper",
+        "organoid"
+      ],
+      "owesMe": [],
+      "iOwe": [
+        {
+          "text": "Order new pipette tips",
+          "meta": "due 2026-04-22"
+        }
+      ],
+      "notes": "reliable, detail-oriented; pair with student orientations."
+    },
+    {
+      "name": "Prof Smith",
+      "role": "PI",
+      "cadence": "weekly written report, last contact 2026-04-14",
+      "lastContact": "2026-04-14",
+      "projects": [
+        "tnf-paper",
+        "r01-renewal"
+      ],
+      "owesMe": [],
+      "iOwe": [
+        {
+          "text": "Weekly report for week of Apr 14–20",
+          "meta": "due 2026-04-25"
+        }
+      ],
+      "notes": "prefers structured written updates Friday afternoon; sparse meeting style."
+    }
+  ],
+  "goals": {
+    "year": [
+      {
+        "title": "Publish TNF paper",
+        "detail": "first-author submission to *Cell Reports* by 2026-10-31."
+      },
+      {
+        "title": "Establish organoid model",
+        "detail": "baseline media validated, 2 cell types tested, protocol documented by end of 2026."
+      },
+      {
+        "title": "R01 renewal submitted",
+        "detail": "renewal submitted by 2026-08-01 with preliminary data for Aim 3."
+      }
+    ],
+    "quarters": {
+      "Q2": [
+        "KR1 · Aim 3 outline drafted",
+        "KR2 · 2 supporting figures for Aim 3",
+        "KR3 · Full Aim 3 section drafted (≈ 1500 words)"
+      ]
+    }
+  },
+  "weekPlan": {
+    "week": "2026-W17",
+    "date_range": "2026-04-20 to 2026-04-24",
+    "top_5": [
+      {
+        "id": "t-methods-revise",
+        "title": "Methods revise",
+        "project": "tnf-paper",
+        "checkpoint": "Methods drafted",
+        "hours": 2
+      },
+      {
+        "id": "t-figure-4",
+        "title": "Figure 4 v1",
+        "project": "tnf-paper",
+        "checkpoint": "Figures v3",
+        "hours": 2.5
+      },
+      {
+        "id": "t-media-v2",
+        "title": "Media protocol v2 finalise",
+        "project": "organoid",
+        "checkpoint": "Media v2 protocol",
+        "hours": 4
+      },
+      {
+        "id": "t-aim3-outline",
+        "title": "R01 Aim 3 outline polish",
+        "project": "r01-renewal",
+        "checkpoint": "Aim 3 outline",
+        "hours": 2
+      },
+      {
+        "id": "t-sara-1on1",
+        "title": "1:1 Sara",
+        "project": "tnf-paper",
+        "checkpoint": null,
+        "hours": 1
+      }
+    ],
+    "blocks": [
+      {
+        "day": "mon",
+        "start": "09:00",
+        "end": "11:00",
+        "type": "deep",
+        "task_id": "t-methods-revise"
+      },
+      {
+        "day": "mon",
+        "start": "14:00",
+        "end": "15:00",
+        "type": "light",
+        "task_id": "t-admin"
+      },
+      {
+        "day": "mon",
+        "start": "15:00",
+        "end": "16:00",
+        "type": "lab",
+        "task_id": "t-passage-routine"
+      },
+      {
+        "day": "tue",
+        "start": "09:00",
+        "end": "11:00",
+        "type": "deep",
+        "task_id": "t-methods-revise"
+      },
+      {
+        "day": "tue",
+        "start": "14:00",
+        "end": "16:00",
+        "type": "lab",
+        "task_id": "t-media-v2"
+      },
+      {
+        "day": "tue",
+        "start": "16:15",
+        "end": "17:00",
+        "type": "meeting",
+        "task_id": "t-sara-1on1"
+      },
+      {
+        "day": "wed",
+        "start": "09:00",
+        "end": "11:30",
+        "type": "deep",
+        "task_id": "t-figure-4"
+      },
+      {
+        "day": "wed",
+        "start": "14:00",
+        "end": "17:00",
+        "type": "lab",
+        "task_id": "t-dose-response"
+      },
+      {
+        "day": "thu",
+        "start": "09:00",
+        "end": "11:00",
+        "type": "deep",
+        "task_id": "t-aim3-outline"
+      },
+      {
+        "day": "thu",
+        "start": "14:00",
+        "end": "15:30",
+        "type": "lab",
+        "task_id": "t-media-v2"
+      },
+      {
+        "day": "thu",
+        "start": "16:00",
+        "end": "16:30",
+        "type": "meeting",
+        "task_id": "t-ravi-1on1"
+      },
+      {
+        "day": "fri",
+        "start": "09:00",
+        "end": "11:00",
+        "type": "deep",
+        "task_id": "t-intro-polish"
+      },
+      {
+        "day": "fri",
+        "start": "14:00",
+        "end": "15:00",
+        "type": "lab",
+        "task_id": "t-passage-routine"
+      },
+      {
+        "day": "fri",
+        "start": "15:30",
+        "end": "16:00",
+        "type": "meeting",
+        "task_id": "t-digest"
+      },
+      {
+        "day": "fri",
+        "start": "16:00",
+        "end": "16:30",
+        "type": "meeting",
+        "task_id": "t-retro"
+      }
+    ]
+  },
+  "taskHistory": {
+    "figure_draft": {
+      "median_min": 140,
+      "p90_min": 210,
+      "n": 8,
+      "samples": [
+        135,
+        140,
+        155,
+        120,
+        180,
+        210,
+        125,
+        145
+      ]
+    },
+    "methods_section": {
+      "median_min": 270,
+      "p90_min": 360,
+      "n": 4,
+      "samples": [
+        240,
+        270,
+        290,
+        360
+      ]
+    },
+    "results_section": {
+      "median_min": 180,
+      "p90_min": 240,
+      "n": 3,
+      "samples": [
+        150,
+        180,
+        240
+      ]
+    },
+    "intro_section": {
+      "median_min": 105,
+      "p90_min": 150,
+      "n": 2,
+      "samples": [
+        90,
+        150
+      ]
+    },
+    "passage_routine": {
+      "median_min": 45,
+      "p90_min": 75,
+      "n": 23,
+      "samples": [
+        30,
+        40,
+        45,
+        45,
+        50,
+        60,
+        75,
+        45,
+        40,
+        50,
+        45
+      ]
+    },
+    "dose_response": {
+      "median_min": 360,
+      "p90_min": 480,
+      "n": 6,
+      "samples": [
+        300,
+        360,
+        360,
+        420,
+        480,
+        330
+      ]
+    },
+    "grant_section": {
+      "median_min": 240,
+      "p90_min": 330,
+      "n": 3,
+      "samples": [
+        210,
+        240,
+        330
+      ]
+    }
+  },
+  "stats": {
+    "activeProjects": 3,
+    "writingStreak": 1,
+    "overdue": 0
+  }
+}

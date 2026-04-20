@@ -1,0 +1,16 @@
+{
+  "name": "research-pm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Claude-operated project manager — markdown source, static site",
+  "scripts": {
+    "build": "node tools/build-data.js",
+    "build:deck": ".venv/bin/python tools/build_deck.py"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

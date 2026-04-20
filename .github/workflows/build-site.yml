@@ -1,0 +1,59 @@
+name: build-site
+
+# Rebuilds docs/data.json from the markdown source whenever anything
+# that affects the site changes. GitHub Pages (configured to serve
+# from main:/docs) picks up the commit automatically.
+#
+# Uses [skip ci] in the auto-commit message to avoid loops.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "projects/**"
+      - "progress/**"
+      - "people.md"
+      - "goals.md"
+      - "week-plans/**"
+      - "meta/**"
+      - "tools/build-data.js"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+
+      - name: Build data.json
+        run: node tools/build-data.js
+
+      - name: Commit and push data.json if changed
+        run: |
+          if git diff --quiet docs/data.json; then
+            echo "No change to docs/data.json — skipping commit."
+            exit 0
+          fi
+          git config user.name  "research-pm-bot"
+          git config user.email "research-pm-bot@users.noreply.github.com"
+          git add docs/data.json
+          git commit -m "build: refresh docs/data.json [skip ci]"
+          git push

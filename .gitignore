@@ -20,3 +20,6 @@ __pycache__/
 # Claude Code local session state
 .claude/last-standup
 .claude/onboarding-state
+
+# Node
+node_modules/

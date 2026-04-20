@@ -1,11 +1,12 @@
-"""Build PRESENTATION.pptx — 6-slide deck for the research associate.
+"""Build a 6-slide presentation deck (.pptx) for the research associate.
 
-Run: .venv/bin/python tools/build_deck.py
-Outputs: PRESENTATION.pptx at repo root.
+Run:   .venv/bin/python tools/build_deck.py [output_filename.pptx]
+  (default filename: PRESENTATION.pptx at repo root)
 
 Design: corporate-clean, 16:9, Calibri, shapes (not ASCII/Mermaid), editable.
 """
 
+import sys
 from pathlib import Path
 
 from pptx import Presentation
@@ -227,14 +228,14 @@ def add_chrome(slide, slide_num, title_text, eyebrow=None):
 
 def build_slide_1(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])  # blank
-    add_chrome(slide, 1, "Her week, with Claude in it",
+    add_chrome(slide, 1, "A week with this tool",
                eyebrow="Workflow")
 
     # intro line
     add_textbox(slide, MARGIN, Inches(1.42),
-                Inches(12.33), Inches(0.35),
-                "Claude runs the rituals. She writes, runs lab work, meets people — and tells Claude what happened.",
-                size=13, color=MUTED, line_spacing=1.2)
+                Inches(12.33), Inches(0.5),
+                "This is a markdown-based project manager that Claude operates. You do the work; Claude handles the planning, logging, and follow-ups. The small tags below are the commands Claude runs — a standup (today's plan), a digest (what shipped), a retrospective (what slipped).",
+                size=12, color=MUTED, line_spacing=1.2)
 
     # 5 day columns
     days = ["MON", "TUE", "WED", "THU", "FRI"]
@@ -315,11 +316,11 @@ def build_slide_1(prs):
                 line_spacing=1.0)
 
     actions = [
-        (0, "Monday",    "/week-plan",  "Proposes top-5 from upcoming\ncheckpoints. She edits."),
-        (1, "Morning",   "/standup",    "Today's 3 · overdue ·\ncalendar shape."),
-        (2, "Morning",   "/standup",    "Also: detects slipped\ncheckpoints from Tue."),
-        (3, "Morning",   "/standup",    "Drafts Sara's 1:1 agenda\nfrom owes-me list."),
-        (4, "Friday",    "/digest + /retro", "Names shipped items.\nReflects on what slipped."),
+        (0, "Monday",    "/week-plan",  "Drafts your top-5 for the\nweek. You edit."),
+        (1, "Morning",   "/standup",    "Today's 3 tasks, anything\noverdue, calendar shape."),
+        (2, "Morning",   "/standup",    "Flags anything that slipped\nfrom the day before."),
+        (3, "Morning",   "/standup",    "Drafts the 1:1 agenda for\nyour afternoon meeting."),
+        (4, "Friday",    "/digest + /retro", "Summary of what shipped,\nnotes on what slipped."),
     ]
     for day_idx, when, cmd, body in actions:
         x = col_x0 + (col_w + col_gap) * day_idx + Inches(0.05)
@@ -355,89 +356,224 @@ def build_slide_1(prs):
         lx += Inches(1.3)
 
 
-# ---------- slide 2: Six principles ----------
+# ---------- slide 2: What you see each morning (dashboard + standup) ----------
 
 def build_slide_2(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    add_chrome(slide, 2, "Six principles behind every decision",
-               eyebrow="Philosophy")
+    add_chrome(slide, 2, "What you see each morning",
+               eyebrow="Daily touchpoint")
 
     add_textbox(slide, MARGIN, Inches(1.42),
-                Inches(12.33), Inches(0.35),
-                "She should never wonder \"why did Claude do that?\" These rules answer it, every time.",
-                size=13, color=MUTED, line_spacing=1.2)
+                Inches(12.33), Inches(0.5),
+                "Two surfaces you'd open first thing: the dashboard (in a browser) and the standup (in Claude chat). Mockups below. Tell us what's missing or extra.",
+                size=12, color=MUTED, line_spacing=1.2)
 
-    principles = [
-        ("01", "Proactive, not reactive",
-         "Claude runs /standup automatically each morning. She never has to ask \"what should I work on?\""),
-        ("02", "Decide on her behalf",
-         "Priority order is fixed: deadlines → writing → unblock team → perishable lab → experiments → admin."),
-        ("03", "Ritual cadence",
-         "Monday plan. Daily standup + checkin. Friday digest + retro. Monthly review. Quarterly OKR retro."),
-        ("04", "WIP limit: 3 projects",
-         "A fourth active project forces a pause or downgrade. Protects depth against drift."),
-        ("05", "Writing is sacred",
-         "Daily 90-minute Deep block is protected. Claude flags if five days pass with no writing entry."),
-        ("06", "Goal cascade visible",
-         "Every daily task shows its chain — checkpoint, quarterly objective, year goal. No orphan work."),
+    # ----- left: dashboard mockup -----
+    dx = MARGIN
+    dy = Inches(2.0)
+    dw = Inches(6.2)
+    dh = Inches(4.95)
+
+    # card + fake browser chrome
+    add_rrect(slide, dx, dy, dw, dh, fill=CARD_BG,
+              line_color=LINE, line_width=Pt(0.75))
+    add_rect(slide, dx, dy, dw, Inches(0.3),
+             fill=tint(LINE, 0.5), line_color=None)
+    for i, c in enumerate([RGBColor(0xff, 0x5f, 0x57),
+                           RGBColor(0xfe, 0xbc, 0x2e),
+                           RGBColor(0x28, 0xc8, 0x40)]):
+        add_dot(slide, dx + Inches(0.15 + 0.17 * i), dy + Inches(0.15),
+                Inches(0.1), c)
+    add_rrect(slide, dx + Inches(0.7), dy + Inches(0.07),
+              dw - Inches(0.9), Inches(0.16),
+              fill=WHITE, line_color=LINE, line_width=Pt(0.4))
+    add_textbox(slide, dx + Inches(0.8), dy + Inches(0.07),
+                dw - Inches(1.1), Inches(0.16),
+                "research-pm.github.io/dashboard",
+                size=8, color=MUTED, line_spacing=1.0)
+
+    cx = dx + Inches(0.25)
+    cw = dw - Inches(0.5)
+    cy = dy + Inches(0.45)
+
+    # title row
+    add_textbox(slide, cx, cy, cw, Inches(0.3),
+                "research-pm — Tuesday, Apr 21",
+                size=13, bold=True, color=NAVY, line_spacing=1.0)
+    cy += Inches(0.35)
+
+    # KPI row
+    kpis = [
+        ("ACTIVE PROJECTS", "3 / 3", "at WIP cap"),
+        ("WRITING STREAK",  "12 days", "block held"),
+        ("OVERDUE",         "1",      "from Monday"),
     ]
+    kpi_w = (cw - Inches(0.3)) / 3
+    for i, (label, value, sub) in enumerate(kpis):
+        kx = cx + (kpi_w + Inches(0.15)) * i
+        add_rrect(slide, kx, cy, kpi_w, Inches(0.65),
+                  fill=tint(TEAL, 0.92), line_color=None)
+        add_textbox(slide, kx + Inches(0.1), cy + Inches(0.05),
+                    kpi_w - Inches(0.2), Inches(0.15),
+                    label, size=7, bold=True, color=TEAL, line_spacing=1.0)
+        add_textbox(slide, kx + Inches(0.1), cy + Inches(0.17),
+                    kpi_w - Inches(0.2), Inches(0.3),
+                    value, size=15, bold=True, color=NAVY, line_spacing=1.0)
+        add_textbox(slide, kx + Inches(0.1), cy + Inches(0.44),
+                    kpi_w - Inches(0.2), Inches(0.2),
+                    sub, size=8, color=MUTED, line_spacing=1.0)
+    cy += Inches(0.8)
 
-    cols = 3
-    rows = 2
-    gutter_x = Inches(0.3)
-    gutter_y = Inches(0.35)
-    grid_x0 = MARGIN
-    grid_y0 = Inches(2.0)
-    card_w = (SLIDE_W - MARGIN * 2 - gutter_x * (cols - 1)) / cols
-    card_h = (Inches(4.7) - gutter_y * (rows - 1)) / rows
+    # Projects section
+    add_textbox(slide, cx, cy, cw, Inches(0.22),
+                "ACTIVE PROJECTS", size=9, bold=True, color=TEAL, line_spacing=1.0)
+    cy += Inches(0.25)
+    projects = [
+        (GREEN, "TNF paper",       "last · methods draft (2h)",  "next · figures v3"),
+        (AMBER, "Organoid model",  "last · media v2 protocol",   "next · cell type B stable"),
+        (GREEN, "R01 renewal",     "last · Aim 3 outline",       "next · preliminary data"),
+    ]
+    for status, name, last, nxt in projects:
+        add_line(slide, cx, cy + Inches(0.52),
+                 cx + cw, cy + Inches(0.52),
+                 color=tint(LINE, 0.5), width_pt=0.5)
+        add_dot(slide, cx + Inches(0.1), cy + Inches(0.16),
+                Inches(0.12), status)
+        add_textbox(slide, cx + Inches(0.25), cy + Inches(0.03),
+                    Inches(2.5), Inches(0.22),
+                    name, size=11, bold=True, color=NAVY, line_spacing=1.0)
+        add_textbox(slide, cx + Inches(0.25), cy + Inches(0.26),
+                    cw - Inches(0.25), Inches(0.2),
+                    f"{last}    ·    {nxt}",
+                    size=8, color=MUTED, line_spacing=1.0)
+        cy += Inches(0.53)
+    cy += Inches(0.05)
 
-    for i, (num, title, body) in enumerate(principles):
-        row, col = divmod(i, cols)
-        x = grid_x0 + (card_w + gutter_x) * col
-        y = grid_y0 + (card_h + gutter_y) * row
+    # Quarterly goals
+    add_textbox(slide, cx, cy, cw, Inches(0.22),
+                "QUARTERLY GOALS", size=9, bold=True, color=TEAL, line_spacing=1.0)
+    cy += Inches(0.25)
+    goals_q = [
+        ("TNF paper  ·  Q2 draft  (OKR)",      0.67, AMBER),
+        ("Organoid  ·  Q2 baseline  (narr.)",  0.40, AMBER),
+    ]
+    for label, pct, color in goals_q:
+        add_textbox(slide, cx, cy, Inches(3.2), Inches(0.2),
+                    label, size=9, color=INK, line_spacing=1.0)
+        bar_x = cx + Inches(3.2)
+        bar_w = cw - Inches(3.6)
+        add_rect(slide, bar_x, cy + Inches(0.06),
+                 bar_w, Inches(0.1),
+                 fill=tint(LINE, 0.3), line_color=None)
+        add_rect(slide, bar_x, cy + Inches(0.06),
+                 Emu(int(bar_w * pct)), Inches(0.1),
+                 fill=color, line_color=None)
+        add_textbox(slide, cx + cw - Inches(0.35), cy,
+                    Inches(0.35), Inches(0.2),
+                    f"{int(pct*100)}%", size=8, bold=True, color=color,
+                    align=PP_ALIGN.RIGHT, line_spacing=1.0)
+        cy += Inches(0.23)
 
-        # card shell
-        add_rrect(slide, x, y, card_w, card_h,
-                  fill=CARD_BG, line_color=LINE, line_width=Pt(0.75))
+    # ----- right: standup (Claude chat) mockup -----
+    sx = dx + dw + Inches(0.2)
+    sy = dy
+    sw = SLIDE_W - MARGIN - sx
+    sh = dh
 
-        # teal left accent bar (inside card)
-        accent_w = Inches(0.08)
-        add_rect(slide, x, y, accent_w, card_h, fill=TEAL, line_color=None)
+    add_rrect(slide, sx, sy, sw, sh,
+              fill=tint(NAVY, 0.97), line_color=LINE, line_width=Pt(0.75))
+    add_rect(slide, sx, sy, sw, Inches(0.35),
+             fill=NAVY, line_color=None)
+    add_dot(slide, sx + Inches(0.2), sy + Inches(0.175),
+            Inches(0.16), TEAL)
+    add_textbox(slide, sx + Inches(0.4), sy + Inches(0.08),
+                sw - Inches(0.5), Inches(0.22),
+                "Claude  ·  morning standup",
+                size=10, bold=True, color=WHITE, line_spacing=1.0)
+    add_textbox(slide, sx + sw - Inches(1.5), sy + Inches(0.08),
+                Inches(1.3), Inches(0.22),
+                "9:02 am", size=8, color=tint(TEAL, 0.5),
+                align=PP_ALIGN.RIGHT, line_spacing=1.0)
 
-        # number
-        add_textbox(slide, x + Inches(0.3), y + Inches(0.25),
-                    Inches(1), Inches(0.35),
-                    num, size=11, bold=True, color=TEAL,
-                    line_spacing=1.0)
+    bx = sx + Inches(0.25)
+    bw = sw - Inches(0.5)
+    by = sy + Inches(0.5)
 
-        # title
-        add_textbox(slide, x + Inches(0.3), y + Inches(0.55),
-                    card_w - Inches(0.5), Inches(0.5),
-                    title, size=17, bold=True, color=NAVY,
-                    line_spacing=1.1)
+    add_textbox(slide, bx, by, bw, Inches(0.25),
+                "Good morning — standup for Tuesday, Apr 21.",
+                size=11, color=INK, line_spacing=1.0)
+    by += Inches(0.35)
 
-        # divider
-        add_line(slide, x + Inches(0.3), y + Inches(1.15),
-                 x + Inches(0.8), y + Inches(1.15),
-                 color=TEAL, width_pt=1.25)
+    # TODAY'S 3
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "TODAY'S 3", size=9, bold=True, color=TEAL, line_spacing=1.0)
+    by += Inches(0.24)
+    todays = [
+        ("09:00–11:00", DEEP,    "Methods revise",
+         "TNF paper  ›  Methods drafted  ›  Q2 draft complete"),
+        ("14:00–16:00", LAB,     "Media protocol v2",
+         "Organoid  ›  Media v2  ›  Q2 baseline"),
+        ("16:15–17:00", MEETING, "1:1 with Sara",
+         "People  ›  Sara owes 2  ›  4-week cadence"),
+    ]
+    for tm, color, task, chain in todays:
+        add_rect(slide, bx, by + Inches(0.03),
+                 Inches(0.1), Inches(0.22), fill=color, line_color=None)
+        add_textbox(slide, bx + Inches(0.17), by,
+                    Inches(1.25), Inches(0.22),
+                    tm, size=8, bold=True, color=MUTED, line_spacing=1.0,
+                    font="Consolas")
+        add_textbox(slide, bx + Inches(1.5), by,
+                    bw - Inches(1.5), Inches(0.22),
+                    task, size=10, bold=True, color=NAVY, line_spacing=1.0)
+        add_textbox(slide, bx + Inches(0.17), by + Inches(0.22),
+                    bw - Inches(0.17), Inches(0.2),
+                    chain, size=7.5, color=TEAL, line_spacing=1.0)
+        by += Inches(0.46)
 
-        # body
-        add_textbox(slide, x + Inches(0.3), y + Inches(1.3),
-                    card_w - Inches(0.5), card_h - Inches(1.4),
-                    body, size=12, color=INK, line_spacing=1.35)
+    by += Inches(0.05)
+
+    # Overdue
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "OVERDUE", size=9, bold=True, color=RED, line_spacing=1.0)
+    by += Inches(0.22)
+    add_textbox(slide, bx + Inches(0.1), by,
+                bw - Inches(0.1), Inches(0.22),
+                "Figure 4 v1 (TNF) — due Monday. Re-slot, or push?",
+                size=9, color=INK, line_spacing=1.0)
+    by += Inches(0.3)
+
+    # Calendar shape
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "CALENDAR SHAPE", size=9, bold=True, color=TEAL, line_spacing=1.0)
+    by += Inches(0.22)
+    add_textbox(slide, bx + Inches(0.1), by,
+                bw - Inches(0.1), Inches(0.22),
+                "3h Deep morning  ·  2h Lab afternoon  ·  1 meeting",
+                size=9, color=INK, line_spacing=1.0)
+    by += Inches(0.3)
+
+    # Heads up
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "HEADS UP", size=9, bold=True, color=AMBER, line_spacing=1.0)
+    by += Inches(0.22)
+    add_textbox(slide, bx + Inches(0.1), by,
+                bw - Inches(0.1), Inches(0.4),
+                "Writing block skipped twice this week. Organoid log silent 4 days.",
+                size=9, color=INK, line_spacing=1.2)
 
 
 # ---------- slide 3: Goal cascade ----------
 
 def build_slide_3(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    add_chrome(slide, 3, "How goals roll together",
-               eyebrow="Goal architecture")
+    add_chrome(slide, 3, "How goals connect",
+               eyebrow="Goal structure")
 
     add_textbox(slide, MARGIN, Inches(1.42),
-                Inches(12.33), Inches(0.35),
-                "Two branches — OKR for the paper, narrative for the exploratory project. Same cascade. Same daily surface.",
-                size=13, color=MUTED, line_spacing=1.2)
+                Inches(12.33), Inches(0.5),
+                "Year goals break into quarters, then projects, then weeks, then days. Quarterly goals come in two styles: OKR (Objective + measurable Key Results) for tight-clock work; narrative (status + paragraph) for exploratory work.",
+                size=12, color=MUTED, line_spacing=1.2)
 
     # level labels on the left
     level_labels = [
@@ -499,14 +635,14 @@ def build_slide_3(prs):
               line_color=LINE, line_width=Pt(0.75))
     add_textbox(slide, lx + Inches(0.2), y + Inches(0.08),
                 box_w - Inches(0.4), Inches(0.3),
-                "Q2 — Draft complete", size=12, bold=True, color=NAVY,
+                "Q2 — Draft complete  (OKR)", size=12, bold=True, color=NAVY,
                 line_spacing=1.0)
 
     # 3 KRs as mini progress bars
     kr_defs = [
-        ("KR1  Methods drafted",  1.00, GREEN),
-        ("KR2  Figures v3",       0.67, AMBER),
-        ("KR3  Co-author review", 0.00, MUTED),
+        ("Key Result 1 — Methods drafted",  1.00, GREEN),
+        ("Key Result 2 — Figures v3",       0.67, AMBER),
+        ("Key Result 3 — Co-author review", 0.00, MUTED),
     ]
     for i, (kr_label, pct, color) in enumerate(kr_defs):
         ky = y + Inches(0.4 + i * 0.21)
@@ -532,8 +668,8 @@ def build_slide_3(prs):
     add_rrect(slide, rx, y, box_w, h, fill=CARD_BG,
               line_color=LINE, line_width=Pt(0.75))
     add_textbox(slide, rx + Inches(0.2), y + Inches(0.08),
-                Inches(2), Inches(0.3),
-                "Q2 — Baseline working", size=12, bold=True, color=NAVY,
+                Inches(3), Inches(0.3),
+                "Q2 — Baseline working  (narrative)", size=12, bold=True, color=NAVY,
                 line_spacing=1.0)
     # traffic light
     add_dot(slide, rx + box_w - Inches(0.35), y + Inches(0.22),
@@ -564,8 +700,8 @@ def build_slide_3(prs):
                   line_color=LINE, line_width=Pt(0.75))
         add_textbox(slide, px + Inches(0.2), y + Inches(0.08),
                     box_w - Inches(0.4), Inches(0.22),
-                    "CHECKPOINTS · DoD per checkpoint", size=8, bold=True,
-                    color=TEAL, line_spacing=1.0)
+                    "CHECKPOINTS  ·  each has a Definition of Done",
+                    size=8, bold=True, color=TEAL, line_spacing=1.0)
         # 3 mini-rows
         for i, (label, color, pct) in enumerate(items):
             ly = y + Inches(0.32 + i*0.17)
@@ -640,13 +776,13 @@ def build_slide_3(prs):
 
 def build_slide_4(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    add_chrome(slide, 4, "Same data, every zoom level",
+    add_chrome(slide, 4, "One data source, two views",
                eyebrow="Visualise")
 
     add_textbox(slide, MARGIN, Inches(1.42),
-                Inches(12.33), Inches(0.35),
-                "Every view is generated from the same markdown. Zoom in on a Gantt bar — and see the exact day block it feeds.",
-                size=13, color=MUTED, line_spacing=1.2)
+                Inches(12.33), Inches(0.5),
+                "All views come from the same markdown files. The Gantt (top) shows a project across months. The Plan Board (bottom) shows this week's calendar blocks. Move something in one view, the other updates.",
+                size=12, color=MUTED, line_spacing=1.2)
 
     # ===== top: project Gantt with swim lanes =====
     gantt_x = MARGIN
@@ -891,13 +1027,13 @@ def build_slide_4(prs):
 
 def build_slide_5(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    add_chrome(slide, 5, "Move anything — see the cascade",
+    add_chrome(slide, 5, "Moving things around",
                eyebrow="Modify")
 
     add_textbox(slide, MARGIN, Inches(1.42),
-                Inches(12.33), Inches(0.35),
-                "Drag a bar, or tell Claude — same adjuster runs. Cascade previewed before anything commits.",
-                size=13, color=MUTED, line_spacing=1.2)
+                Inches(12.33), Inches(0.5),
+                "Drag the bar on the Gantt, or tell Claude in chat. Either way, every downstream block shifts — and you see the impact before anything saves. (\"Cascade\" = the knock-on effect.)",
+                size=12, color=MUTED, line_spacing=1.2)
 
     # ===== left panel: BEFORE =====
     panel_y = Inches(2.0)
@@ -1090,9 +1226,9 @@ def build_slide_5(prs):
 
     # three rows of impact
     imp_items = [
-        ("Q2 Objective", "\u25cf \u2192 \u25cf", "on track \u2192 watch", GREEN, AMBER),
-        ("Year goal",    "\u25cf",               "on track",              GREEN, None),
-        ("Slack on Figures v3", "",              "2 days remaining",     AMBER, None),
+        ("Q2 Objective",             "\u25cf \u2192 \u25cf", "on track \u2192 watch",   GREEN, AMBER),
+        ("Year goal",                "\u25cf",               "on track",                 GREEN, None),
+        ("Buffer on Figures v3",     "",                     "2 days remaining",         AMBER, None),
     ]
 
     for i, (label, glyph, text, c1, c2) in enumerate(imp_items):
@@ -1141,92 +1277,251 @@ def build_slide_5(prs):
                     body, size=9, color=MUTED, line_spacing=1.2)
 
 
-# ---------- slide 6: Management mechanics ----------
+# ---------- slide 6: Artifact gallery ----------
+
+def _panel_shell(slide, x, y, w, h, eyebrow, title):
+    add_rrect(slide, x, y, w, h, fill=CARD_BG,
+              line_color=LINE, line_width=Pt(0.75))
+    add_textbox(slide, x + Inches(0.2), y + Inches(0.1),
+                w - Inches(0.4), Inches(0.2),
+                eyebrow.upper(), size=8, bold=True, color=TEAL, line_spacing=1.0)
+    add_textbox(slide, x + Inches(0.2), y + Inches(0.28),
+                w - Inches(0.4), Inches(0.3),
+                title, size=12, bold=True, color=NAVY, line_spacing=1.0)
+
+
+def _draw_project_page(slide, x, y, w, h):
+    _panel_shell(slide, x, y, w, h,
+                 "artifact · projects/tnf-paper.md",
+                 "Project page — TNF paper")
+    bx = x + Inches(0.25)
+    bw = w - Inches(0.5)
+    by = y + Inches(0.62)
+
+    # frontmatter block (code-style)
+    fm_h = Inches(0.78)
+    add_rect(slide, bx, by, bw, fm_h,
+             fill=tint(LINE, 0.4), line_color=None)
+    fm_lines = [
+        "status: active",
+        "goal_model: okr",
+        "deadline: 2026-10-31 (Cell Reports)",
+        "collaborators: Prof Smith, Ravi (postdoc)",
+    ]
+    for i, line in enumerate(fm_lines):
+        add_textbox(slide, bx + Inches(0.1), by + Inches(0.06 + i * 0.17),
+                    bw - Inches(0.2), Inches(0.17),
+                    line, size=8, color=INK, line_spacing=1.0, font="Consolas")
+    by += fm_h + Inches(0.12)
+
+    # Checkpoints heading
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "## Checkpoints",
+                size=10, bold=True, color=NAVY, line_spacing=1.0,
+                font="Consolas")
+    by += Inches(0.26)
+
+    checkpoints = [
+        (GREEN, "Methods drafted",  "Apr 15", "DoD: 2000 words, cites done"),
+        (AMBER, "Results drafted",  "May 15", "DoD: numbers + structure"),
+        (MUTED, "Figures v3",       "May 31", "DoD: 6 of 6 finalised"),
+        (MUTED, "Co-author review", "Jun 15", "DoD: all replies incorporated"),
+    ]
+    for color, name, date, dod in checkpoints:
+        add_dot(slide, bx + Inches(0.08), by + Inches(0.09),
+                Inches(0.1), color)
+        add_textbox(slide, bx + Inches(0.22), by,
+                    Inches(1.6), Inches(0.2),
+                    name, size=9, bold=True, color=NAVY, line_spacing=1.0)
+        add_textbox(slide, bx + Inches(1.9), by,
+                    Inches(0.75), Inches(0.2),
+                    date, size=8, color=MUTED, line_spacing=1.0)
+        add_textbox(slide, bx + Inches(2.7), by,
+                    bw - Inches(2.7), Inches(0.2),
+                    dod, size=8, color=MUTED, line_spacing=1.0)
+        by += Inches(0.22)
+
+
+def _draw_oneonone(slide, x, y, w, h):
+    _panel_shell(slide, x, y, w, h,
+                 "artifact · /one-on-one sara",
+                 "1:1 agenda draft — Sara (postdoc) · Apr 24")
+    bx = x + Inches(0.25)
+    bw = w - Inches(0.5)
+    by = y + Inches(0.62)
+
+    sections = [
+        ("She owes me  (2)",
+         [("Organoid protocol v2", "committed Apr 8 · due Apr 22"),
+          ("Figure 4 first draft",  "committed Apr 14 · due Apr 30")]),
+        ("I owe her  (1)",
+         [("Feedback on cell type B results", "due Apr 23")]),
+        ("Recent progress",
+         [("Media v2 reliable across 6 passages", ""),
+          ("Cell type B contamination — root cause traced to incubator", "")]),
+        ("Open blockers",
+         [("Antibody reorder pending — ETA Apr 28", "")]),
+    ]
+    for title_txt, items in sections:
+        add_textbox(slide, bx, by, bw, Inches(0.2),
+                    title_txt, size=9, bold=True, color=TEAL, line_spacing=1.0)
+        by += Inches(0.2)
+        for item, meta in items:
+            add_textbox(slide, bx + Inches(0.15), by,
+                        Inches(3.2), Inches(0.18),
+                        f"\u2022  {item}",
+                        size=8, color=INK, line_spacing=1.15)
+            if meta:
+                add_textbox(slide, bx + Inches(3.4), by,
+                            bw - Inches(3.4), Inches(0.18),
+                            meta,
+                            size=7, color=MUTED, line_spacing=1.15, font="Consolas")
+            by += Inches(0.19)
+        by += Inches(0.05)
+
+
+def _draw_collab_report(slide, x, y, w, h):
+    _panel_shell(slide, x, y, w, h,
+                 "artifact · /report tnf for prof-smith",
+                 "Weekly report — TNF paper · for Prof Smith")
+    bx = x + Inches(0.25)
+    bw = w - Inches(0.5)
+    by = y + Inches(0.62)
+
+    add_textbox(slide, bx, by, bw, Inches(0.2),
+                "Week of Apr 14 — Apr 20",
+                size=9, color=MUTED, line_spacing=1.0)
+    by += Inches(0.23)
+
+    # This week
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "Progress this week",
+                size=10, bold=True, color=NAVY, line_spacing=1.0)
+    by += Inches(0.22)
+    for line in [
+        "Methods section drafted (2000 words)",
+        "Figures 1–3 finalised at v3",
+        "Replicate run matches primary data within 5%",
+    ]:
+        add_textbox(slide, bx + Inches(0.15), by,
+                    bw - Inches(0.15), Inches(0.19),
+                    f"\u2713  {line}",
+                    size=8, color=INK, line_spacing=1.1)
+        by += Inches(0.2)
+    by += Inches(0.08)
+
+    # Next week
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "Next week",
+                size=10, bold=True, color=NAVY, line_spacing=1.0)
+    by += Inches(0.22)
+    for line in [
+        "Results section drafting (target: Fri)",
+        "Figures 4–6 first pass",
+    ]:
+        add_textbox(slide, bx + Inches(0.15), by,
+                    bw - Inches(0.15), Inches(0.19),
+                    f"\u2192  {line}",
+                    size=8, color=INK, line_spacing=1.1)
+        by += Inches(0.2)
+    by += Inches(0.06)
+
+    # Asks
+    add_textbox(slide, bx, by, bw, Inches(0.22),
+                "Your input needed",
+                size=10, bold=True, color=AMBER, line_spacing=1.0)
+    by += Inches(0.22)
+    add_textbox(slide, bx + Inches(0.15), by,
+                bw - Inches(0.15), Inches(0.4),
+                "\u2022  Methods section comments before Results starts?\n"
+                "\u2022  Cell Reports 6-panel figure limit — stick to it?",
+                size=8, color=INK, line_spacing=1.3)
+    by += Inches(0.44)
+
+    # output variants footer
+    add_line(slide, bx, by, bx + bw, by, color=LINE, width_pt=0.5)
+    by += Inches(0.08)
+    add_textbox(slide, bx, by, bw, Inches(0.2),
+                "Saved to exports/  ·  .md  ·  .email.md  ·  .slides.md",
+                size=8, bold=True, color=TEAL, line_spacing=1.0, font="Consolas")
+
+
+def _draw_duration_prompt(slide, x, y, w, h):
+    _panel_shell(slide, x, y, w, h,
+                 "prompt · duration learning",
+                 "How long does this take? (learned from history)")
+    bx = x + Inches(0.25)
+    bw = w - Inches(0.5)
+    by = y + Inches(0.7)
+
+    # tool bubble
+    bubble_h = Inches(1.15)
+    add_rrect(slide, bx, by, bw, bubble_h,
+              fill=tint(TEAL, 0.92),
+              line_color=TEAL, line_width=Pt(0.5))
+    add_dot(slide, bx + Inches(0.2), by + Inches(0.2),
+            Inches(0.16), TEAL)
+    add_textbox(slide, bx + Inches(0.4), by + Inches(0.1),
+                Inches(1.5), Inches(0.22),
+                "Claude",
+                size=9, bold=True, color=TEAL, line_spacing=1.0)
+    add_textbox(slide, bx + Inches(0.25), by + Inches(0.32),
+                bw - Inches(0.5), bubble_h - Inches(0.4),
+                "Based on your last 8 figure drafts (median 2h 20m), "
+                "I\u2019ll block 2.5h tomorrow 09:00–11:30 in your "
+                "protected writing block.\n\nConfirm, or give a different length.",
+                size=9.5, color=INK, line_spacing=1.3)
+    by += bubble_h + Inches(0.15)
+
+    # user reply
+    reply_w = Inches(2.4)
+    rx = bx + bw - reply_w
+    add_rrect(slide, rx, by, reply_w, Inches(0.38),
+              fill=NAVY, line_color=None)
+    add_textbox(slide, rx + Inches(0.2), by + Inches(0.08),
+                reply_w - Inches(0.4), Inches(0.22),
+                "yes — confirm",
+                size=10, color=WHITE, line_spacing=1.0, font="Consolas")
+    by += Inches(0.53)
+
+    # data source
+    add_textbox(slide, bx, by, bw, Inches(0.2),
+                "Underlying data  ·  meta/task-history.json",
+                size=8, bold=True, color=TEAL, line_spacing=1.0)
+    by += Inches(0.2)
+    add_textbox(slide, bx, by, bw, Inches(0.4),
+                "figure_draft: { median_min: 140, p90_min: 210, n: 8 }",
+                size=8, color=INK, line_spacing=1.2, font="Consolas")
+
 
 def build_slide_6(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[6])
-    add_chrome(slide, 6, "Management mechanics",
-               eyebrow="Under the hood")
+    add_chrome(slide, 6, "Four things the tool produces",
+               eyebrow="Outputs")
 
     add_textbox(slide, MARGIN, Inches(1.42),
-                Inches(12.33), Inches(0.35),
-                "Six engines run quietly in the background so she doesn't have to think about any of them.",
-                size=13, color=MUTED, line_spacing=1.2)
+                Inches(12.33), Inches(0.5),
+                "A project page, a 1:1 agenda draft, a weekly report for a collaborator, and a time-estimate prompt. All come from the same markdown files. Mockups below.",
+                size=12, color=MUTED, line_spacing=1.2)
 
-    mechanics = [
-        ("Calendar-aware planning",
-         "Reads Google + Outlook nightly.",
-         "Tags blocks as Deep / Lab / Light / Social. Writes protected events to her work calendar so colleagues see them.",
-         DEEP),
-        ("Duration learning",
-         "Stops asking \u201chow long?\u201d",
-         "Median + p90 per task type from history. After 5 samples, Claude auto-confirms blocks from real data.",
-         LAB),
-        ("Delegation tracking",
-         "Owes-me / I-owe per person.",
-         "Every commitment logged with a date. 1:1 agendas auto-drafted from recent activity + open blockers.",
-         MEETING),
-        ("Anti-burnout signals",
-         "Four gentle triggers.",
-         "Three silent days, late-night entries, repeat blockers, outputless meetings. One kind flag — then drops it.",
-         AMBER),
-        ("Collaborator reports",
-         "One command, three outputs.",
-         "Generates .md / .email.md / .slides.md from real progress logs. Print-to-PDF on the website.",
-         TEAL),
-        ("Knowledge capture",
-         "Nothing dies in chat.",
-         "Protocols, failed experiments with root cause, decisions with context — all in markdown, all in git.",
-         GREEN),
-    ]
-
-    cols = 3
-    rows = 2
+    # 2x2 grid
     gutter_x = Inches(0.3)
-    gutter_y = Inches(0.35)
+    gutter_y = Inches(0.3)
     grid_x0 = MARGIN
     grid_y0 = Inches(2.0)
-    card_w = (SLIDE_W - MARGIN * 2 - gutter_x * (cols - 1)) / cols
-    card_h = (Inches(4.7) - gutter_y * (rows - 1)) / rows
+    card_w = (SLIDE_W - MARGIN * 2 - gutter_x) / 2
+    card_h = (Inches(4.95) - gutter_y) / 2
 
-    for i, (title, tag, body, color) in enumerate(mechanics):
-        row, col = divmod(i, cols)
-        x = grid_x0 + (card_w + gutter_x) * col
-        y = grid_y0 + (card_h + gutter_y) * row
-
-        add_rrect(slide, x, y, card_w, card_h,
-                  fill=CARD_BG, line_color=LINE, line_width=Pt(0.75))
-
-        # top color band
-        add_rrect(slide, x, y, card_w, Inches(0.14),
-                  fill=color, line_color=None)
-
-        # title
-        add_textbox(slide, x + Inches(0.3), y + Inches(0.35),
-                    card_w - Inches(0.5), Inches(0.45),
-                    title, size=16, bold=True, color=NAVY,
-                    line_spacing=1.1)
-
-        # tagline
-        add_textbox(slide, x + Inches(0.3), y + Inches(0.85),
-                    card_w - Inches(0.5), Inches(0.28),
-                    tag, size=11, bold=True, color=color,
-                    line_spacing=1.0)
-
-        # divider
-        add_line(slide, x + Inches(0.3), y + Inches(1.2),
-                 x + Inches(0.8), y + Inches(1.2),
-                 color=color, width_pt=1.25)
-
-        # body
-        add_textbox(slide, x + Inches(0.3), y + Inches(1.35),
-                    card_w - Inches(0.5), card_h - Inches(1.5),
-                    body, size=11, color=INK, line_spacing=1.35)
+    _draw_project_page(slide, grid_x0, grid_y0, card_w, card_h)
+    _draw_oneonone(slide, grid_x0 + card_w + gutter_x, grid_y0, card_w, card_h)
+    _draw_collab_report(slide, grid_x0, grid_y0 + card_h + gutter_y, card_w, card_h)
+    _draw_duration_prompt(slide, grid_x0 + card_w + gutter_x,
+                          grid_y0 + card_h + gutter_y, card_w, card_h)
 
 
 # ---------- main ----------
 
-def build():
+def build(out_name="PRESENTATION.pptx"):
     prs = Presentation()
     prs.slide_width = SLIDE_W
     prs.slide_height = SLIDE_H
@@ -1238,11 +1533,12 @@ def build():
     build_slide_5(prs)
     build_slide_6(prs)
 
-    out = Path(__file__).resolve().parent.parent / "PRESENTATION.pptx"
+    out = Path(__file__).resolve().parent.parent / out_name
     prs.save(out)
     print(f"Wrote {out}")
     return out
 
 
 if __name__ == "__main__":
-    build()
+    name = sys.argv[1] if len(sys.argv) > 1 else "PRESENTATION.pptx"
+    build(name)

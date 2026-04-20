@@ -13,3 +13,6 @@ __pycache__/
 
 # Build artifacts
 *.tmp
+
+# Office lock files (created when .pptx is open)
+~$*

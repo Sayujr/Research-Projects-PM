@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Standup — research-pm</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html" class="active">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Morning standup</h1>
+    <div class="subtitle">This is what Claude posts in your chat each morning. It runs automatically via the SessionStart hook.</div>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns: 1fr 1fr;">
+    <div class="chat">
+      <div class="chat-head">
+        <span class="dot deep"></span>
+        <span class="who">Claude</span>
+        <span style="color:var(--muted)">· morning standup</span>
+        <span class="time">9:02 am</span>
+      </div>
+
+      <p>Good morning. Here's your standup for <strong>Tuesday, Apr 21</strong>.</p>
+
+      <div class="section-label">Today's 3</div>
+
+      <div class="today-item">
+        <div class="stripe deep"></div>
+        <div class="time">09:00–11:00</div>
+        <div class="task">Methods revise</div>
+        <div class="chain"><span>TNF paper</span><span class="sep">›</span>Methods drafted<span class="sep">›</span>Q2 draft<span class="sep">›</span>2026 paper</div>
+      </div>
+
+      <div class="today-item">
+        <div class="stripe lab"></div>
+        <div class="time">14:00–16:00</div>
+        <div class="task">Media protocol v2</div>
+        <div class="chain"><span>Organoid</span><span class="sep">›</span>Media v2<span class="sep">›</span>Q2 baseline<span class="sep">›</span>2026 model</div>
+      </div>
+
+      <div class="today-item">
+        <div class="stripe meeting"></div>
+        <div class="time">16:15–17:00</div>
+        <div class="task">1:1 with Sara</div>
+        <div class="chain"><span>People</span><span class="sep">›</span>Sara owes 2<span class="sep">›</span>bi-weekly cadence</div>
+      </div>
+
+      <div class="section-label red">Overdue · 1</div>
+      <p style="font-size: 13px;">
+        <strong>Figure 4 v1 (TNF)</strong> — due Monday. Re-slot to Thursday 10:00 Deep block, or push the checkpoint?
+      </p>
+
+      <div class="section-label">Calendar shape</div>
+      <p style="font-size: 13px;">
+        3h Deep morning  ·  2h Lab afternoon  ·  1 meeting (Sara 16:15). No external commitments.
+      </p>
+
+      <div class="section-label amber">Heads up</div>
+      <p style="font-size: 13px;">
+        Writing block skipped twice this week. <strong>Organoid log has been silent 4 days.</strong> If you take today's 09:00–10:30 writing slot, the 5-day flag clears tomorrow.
+      </p>
+
+      <div class="section-label">Streak</div>
+      <p style="font-size: 13px;">
+        12-day writing streak. Longest this quarter.
+      </p>
+
+      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:10px; font-size:12px; color:var(--muted);">
+        Reply with edits, or just <code>/logwin</code> when something ships.
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>What Claude read before writing this</h2>
+        <ul style="list-style:none; padding-left:0; font-size:12px;">
+          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
+            <code>week-plans/2026-W17.md</code> — to pull today's 3 from the Monday week plan
+          </li>
+          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
+            <code>projects/*.md</code> — status, next checkpoint, DoD per active project
+          </li>
+          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
+            <code>progress/2026-04.md</code> — last 7 days for streak, silent-day check
+          </li>
+          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
+            <code>calendar/2026-04.md</code> — synced events, free/busy for today
+          </li>
+          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
+            <code>goals.md</code> — for the goal chain on each item
+          </li>
+          <li style="padding:6px 0;">
+            <code>people.md</code> — owes-me / I-owe / last-contact for the 1:1
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>What fires it</h2>
+        <p style="font-size:13px;">
+          <strong>SessionStart hook</strong> in <code>.claude/settings.json</code>. When you open Claude Code in this repo, it checks whether <code>/standup</code> has run today. If not, it runs.
+        </p>
+        <pre class="frontmatter mt-8" style="white-space:pre-wrap; font-size:11px;">{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "*",
+      "command": ".claude/scripts/maybe-standup.sh"
+    }]
+  }
+}</pre>
+      </div>
+
+      <div class="card">
+        <h2>Manual invocation</h2>
+        <p style="font-size:13px;">
+          Run it any time in Claude chat:
+        </p>
+        <pre class="mono" style="background:#f1f5f9; padding:10px; border-radius:4px; font-size:12px; margin-top:6px;">/standup</pre>
+        <p class="small muted" style="margin-top:8px;">
+          Backed by <code>.claude/commands/standup.md</code> — sets the exact structure Claude should produce.
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Everything above comes from markdown in this repo. No database, no API key.
+</footer>
+
+</body>
+</html>

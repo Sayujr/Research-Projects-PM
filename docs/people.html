@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>People — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .person-card { position: relative; }
+  .person-head {
+    display: grid; grid-template-columns: 48px 1fr auto;
+    gap: 12px; align-items: center; margin-bottom: 10px;
+  }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teal-soft); color: var(--teal);
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 16px;
+  }
+  .owes-list {
+    background: #f8fafc; border-radius: var(--r-sm);
+    padding: 10px; margin: 8px 0;
+  }
+  .owes-list h4 {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .owes-item {
+    display: grid; grid-template-columns: 1fr auto auto;
+    gap: 8px; align-items: center;
+    padding: 4px 0; font-size: 12px;
+  }
+  .owes-item .due { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .add-row {
+    display: grid; grid-template-columns: 1fr 100px auto;
+    gap: 6px; margin-top: 6px;
+  }
+  .add-row input {
+    padding: 5px 8px; border: 1px solid var(--line);
+    border-radius: 3px; font-size: 11px; font-family: inherit;
+  }
+  .add-row button {
+    padding: 5px 10px; background: var(--teal); color: #fff;
+    border: none; border-radius: 3px; font-size: 11px;
+    font-family: inherit; cursor: pointer; font-weight: 600;
+  }
+  .mini-btn {
+    padding: 2px 6px; background: transparent; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 3px;
+    font-family: inherit; font-size: 10px; cursor: pointer;
+  }
+  .mini-btn:hover { color: var(--red); border-color: var(--red); }
+
+  .agenda {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .agenda h3 {
+    font-size: 15px; color: var(--navy); margin-bottom: 10px;
+  }
+  .agenda .section {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .agenda .section:last-child { border-bottom: none; }
+  .agenda .section h4 {
+    font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--teal);
+    margin-bottom: 6px;
+  }
+  .agenda .section ul { list-style: none; padding-left: 0; }
+  .agenda .section li {
+    padding: 3px 0; font-size: 13px;
+  }
+  .agenda .section li::before {
+    content: "· "; color: var(--muted); margin-right: 4px;
+  }
+  .reset-btn {
+    position: fixed; bottom: 16px; right: 16px;
+    padding: 8px 12px; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    font-family: inherit; font-size: 11px; cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html" class="active">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>People</h1>
+    <div class="subtitle">Your team. Edit owes-me / I-owe lists below — the 1:1 agenda rebuilds automatically from them.</div>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns: 2fr 1fr;">
+    <div id="peopleCol"></div>
+
+    <div>
+      <div class="card">
+        <h2>Next 1:1 — Sara</h2>
+        <p class="small muted" style="margin-bottom:10px;">
+          Agenda auto-drafted from her owes-me / I-owe lists plus recent progress. Regenerates whenever you edit.
+        </p>
+        <div class="agenda" id="agenda"></div>
+        <p class="small muted mt-16">
+          Saved to <code>meetings/2026-04-24-1on1-sara.md</code> when you run <code>/one-on-one sara</code>.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>Stale contacts</h2>
+        <p class="small muted mt-8">Anyone you haven't heard from in 21+ days gets flagged here. Helps keep collaborators warm.</p>
+        <div id="stale" class="mt-16"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<button class="reset-btn" onclick="resetAll()">↺ Reset demo data</button>
+
+<footer>
+  people.md in the repo drives this view. Sara's agenda is what Claude produces when you type <code>/one-on-one sara</code>.
+</footer>
+
+<script src="app.js"></script>
+<script>
+  function renderPeople() {
+    const container = document.getElementById('peopleCol');
+    container.innerHTML = '';
+    state.people.forEach((p, pi) => {
+      const card = document.createElement('div');
+      card.className = 'card person-card';
+      card.innerHTML = `
+        <div class="person-head">
+          <div class="avatar">${p.name[0]}</div>
+          <div>
+            <div style="font-size:15px; font-weight:700; color:var(--navy);" contenteditable="true"
+              onblur="updatePerson(${pi}, 'name', this.textContent)">${p.name}</div>
+            <div class="small muted">
+              <span contenteditable="true" onblur="updatePerson(${pi}, 'role', this.textContent)">${p.role}</span> ·
+              <span contenteditable="true" onblur="updatePerson(${pi}, 'cadence', this.textContent)">${p.cadence}</span> ·
+              last contact <span contenteditable="true" onblur="updatePerson(${pi}, 'lastContact', this.textContent)">${p.lastContact}</span>
+            </div>
+          </div>
+          <div>
+            <span class="chip">${p.owesMe.length} owe you</span>
+            ${p.iOwe.length > 0 ? `<span class="chip amber">${p.iOwe.length} you owe</span>` : ''}
+          </div>
+        </div>
+
+        <div class="owes-list">
+          <h4>${p.name} owes you (${p.owesMe.length})</h4>
+          <div id="owes-${pi}">
+            ${p.owesMe.map((o, oi) => `
+              <div class="owes-item">
+                <span contenteditable="true" onblur="updateOwe(${pi}, 'owesMe', ${oi}, 'text', this.textContent)">${o.text}</span>
+                <span class="due">due ${o.due}</span>
+                <button class="mini-btn" onclick="removeOwe(${pi}, 'owesMe', ${oi})">resolved</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="add-row">
+            <input id="owe-text-${pi}" placeholder="Add item ${p.name} owes you">
+            <input id="owe-due-${pi}" type="date" value="2026-04-30">
+            <button onclick="addOwe(${pi}, 'owesMe')">Add</button>
+          </div>
+        </div>
+
+        <div class="owes-list">
+          <h4>You owe ${p.name} (${p.iOwe.length})</h4>
+          <div id="iowe-${pi}">
+            ${p.iOwe.map((o, oi) => `
+              <div class="owes-item">
+                <span contenteditable="true" onblur="updateOwe(${pi}, 'iOwe', ${oi}, 'text', this.textContent)">${o.text}</span>
+                <span class="due">due ${o.due}</span>
+                <button class="mini-btn" onclick="removeOwe(${pi}, 'iOwe', ${oi})">done</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="add-row">
+            <input id="iowe-text-${pi}" placeholder="Add item you owe ${p.name}">
+            <input id="iowe-due-${pi}" type="date" value="2026-04-30">
+            <button onclick="addOwe(${pi}, 'iOwe')">Add</button>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function updatePerson(i, key, val) {
+    state.people[i][key] = val.trim();
+    save();
+    renderAgenda();
+  }
+  function updateOwe(pi, list, oi, key, val) {
+    state.people[pi][list][oi][key] = val.trim();
+    save();
+    renderAgenda();
+  }
+  function removeOwe(pi, list, oi) {
+    state.people[pi][list].splice(oi, 1);
+    save();
+    renderPeople();
+    renderAgenda();
+  }
+  function addOwe(pi, list) {
+    const prefix = list === 'owesMe' ? 'owe' : 'iowe';
+    const text = document.getElementById(`${prefix}-text-${pi}`).value.trim();
+    const due  = document.getElementById(`${prefix}-due-${pi}`).value;
+    if (!text) return;
+    const item = { text, due };
+    if (list === 'owesMe') item.committed = state.today;
+    state.people[pi][list].push(item);
+    save();
+    renderPeople();
+    renderAgenda();
+  }
+
+  function renderAgenda() {
+    const sara = state.people.find(p => p.name === 'Sara');
+    if (!sara) { document.getElementById('agenda').innerHTML = ''; return; }
+    const saraProgress = state.progressLog.filter(l => l.project === 'organoid' || l.project === 'tnf-paper').slice(-3);
+    const html = `
+      <h3>Sara · ${new Date().toLocaleDateString('en-US', { month:'short', day:'numeric' })}</h3>
+      <div class="section">
+        <h4>She owes me (${sara.owesMe.length})</h4>
+        <ul>
+          ${sara.owesMe.map(o => `<li><strong>${o.text}</strong> <span class="small muted">· due ${o.due}</span></li>`).join('') || '<li class="muted">—</li>'}
+        </ul>
+      </div>
+      <div class="section">
+        <h4>I owe her (${sara.iOwe.length})</h4>
+        <ul>
+          ${sara.iOwe.map(o => `<li><strong>${o.text}</strong> <span class="small muted">· due ${o.due}</span></li>`).join('') || '<li class="muted">—</li>'}
+        </ul>
+      </div>
+      <div class="section">
+        <h4>Her recent progress</h4>
+        <ul>
+          ${saraProgress.map(l => `<li>${l.text}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="section">
+        <h4>Open blockers</h4>
+        <ul>
+          ${state.project.blockers.map(b => `<li>${b.text}</li>`).join('') || '<li class="muted">—</li>'}
+        </ul>
+      </div>
+      <div class="section">
+        <h4>Non-urgent</h4>
+        <ul>
+          <li>Career — conference submission in Sep?</li>
+          <li>Next rotation student — when?</li>
+        </ul>
+      </div>`;
+    document.getElementById('agenda').innerHTML = html;
+  }
+
+  function renderStale() {
+    const today = new Date(state.today);
+    const stale = state.people
+      .map(p => ({ name: p.name, days: Math.round((today - new Date(p.lastContact)) / 86400000) }))
+      .filter(x => x.days >= 7)
+      .sort((a, b) => b.days - a.days);
+    const el = document.getElementById('stale');
+    if (stale.length === 0) { el.innerHTML = '<p class="small muted">Everyone current. 🎉</p>'; return; }
+    el.innerHTML = stale.map(s => `
+      <div class="row" style="grid-template-columns: 14px 1fr auto; padding: 6px 0;">
+        <span class="dot ${s.days >= 14 ? 'red' : 'amber'}"></span>
+        <span class="small">${s.name}</span>
+        <span class="small muted">${s.days}d</span>
+      </div>
+    `).join('');
+  }
+
+  renderPeople();
+  renderAgenda();
+  renderStale();
+</script>
+
+</body>
+</html>

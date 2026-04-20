@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan Board — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .board-wrap { position: relative; }
+  .impact-panel {
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--navy);
+    color: #fff;
+    border-radius: var(--r);
+    display: none;
+  }
+  .impact-panel.open { display: block; }
+  .impact-panel h3 { color: #fff; margin-bottom: 8px; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.08em; }
+  .impact-panel .impact-row {
+    display: grid;
+    grid-template-columns: 160px auto 1fr;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .impact-panel .impact-row .label { color: rgba(255,255,255,0.7); }
+  .impact-panel .buttons { margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .impact-panel button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--r-sm);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .impact-panel button.accept { background: var(--amber); color: #78350f; }
+  .impact-panel button.compress { background: var(--green); color: #fff; }
+  .impact-panel button.cut { background: var(--red); color: #fff; }
+  .impact-panel button.cancel { background: rgba(255,255,255,0.1); color: #fff; }
+  .block.ghost {
+    opacity: 0.35;
+    border: 1.5px dashed rgba(255,255,255,0.8);
+    pointer-events: none;
+  }
+  .backlog {
+    background: #f1f5f9;
+    border-radius: var(--r);
+    padding: 12px;
+    border: 1px dashed var(--line-strong);
+  }
+  .backlog h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); margin-bottom: 8px; }
+  .backlog-item {
+    background: #fff;
+    padding: 8px 10px;
+    border-radius: var(--r-sm);
+    margin-bottom: 6px;
+    cursor: grab;
+    font-size: 12px;
+    border-left: 3px solid var(--muted);
+  }
+  .backlog-item.deep { border-left-color: var(--deep); }
+  .backlog-item.lab { border-left-color: var(--lab); }
+  .backlog-item:active { cursor: grabbing; }
+  .task-chain { font-size: 10px; color: var(--teal); margin-top: 2px; }
+  .okr-strip {
+    display: flex;
+    gap: 14px;
+    padding: 10px 14px;
+    background: var(--teal-soft);
+    border-radius: var(--r);
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+  }
+  .okr-strip .item { display: flex; align-items: center; gap: 6px; }
+  .okr-strip .bar { width: 80px; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .okr-strip .bar > span { display: block; height: 100%; background: var(--amber); }
+
+  @media (max-width: 900px) {
+    .board {
+      grid-template-columns: 60px 1fr;
+    }
+    .board .day-col { display: none; }
+    .board .day-col.today { display: block; }
+    .mobile-nav { display: flex; }
+  }
+  .mobile-nav { display: none; margin-bottom: 8px; gap: 8px; justify-content: space-between; }
+  .mobile-nav button {
+    flex: 1;
+    padding: 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html" class="active">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Plan Board — week of Apr 20</h1>
+    <div class="subtitle">Drag blocks to move them. Cascade impact previews below before saving.</div>
+  </div>
+
+  <div class="okr-strip">
+    <div class="item"><span class="dot amber"></span><strong>TNF paper</strong> · Q2 draft <span class="bar"><span style="width:67%;background:var(--amber)"></span></span> 67%</div>
+    <div class="item"><span class="dot amber"></span><strong>Organoid</strong> · Q2 baseline <span class="bar"><span style="width:40%;background:var(--amber)"></span></span> 40%</div>
+    <div class="item"><span class="dot green"></span><strong>R01</strong> · Aim 3 <span class="bar"><span style="width:40%;background:var(--green)"></span></span> 40%</div>
+  </div>
+
+  <div class="mobile-nav">
+    <button onclick="shiftDay(-1)">◀ Prev day</button>
+    <button id="dayLabel" style="font-weight:700">Tuesday Apr 21</button>
+    <button onclick="shiftDay(1)">Next day ▶</button>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns: 3fr 1fr;">
+    <div class="board-wrap">
+      <div class="board" id="board">
+        <!-- time column -->
+        <div class="time-col">
+          <div class="day-head">&nbsp;</div>
+          <div class="time-label">09</div>
+          <div class="time-label">10</div>
+          <div class="time-label">11</div>
+          <div class="time-label">12</div>
+          <div class="time-label">13</div>
+          <div class="time-label">14</div>
+          <div class="time-label">15</div>
+          <div class="time-label">16</div>
+          <div class="time-label">17</div>
+          <div class="time-label">18</div>
+        </div>
+        <!-- 5 day columns -->
+        <div class="day-col" data-day="mon"><div class="day-head">MON 20</div></div>
+        <div class="day-col today" data-day="tue"><div class="day-head">TUE 21</div></div>
+        <div class="day-col" data-day="wed"><div class="day-head">WED 22</div></div>
+        <div class="day-col" data-day="thu"><div class="day-head">THU 23</div></div>
+        <div class="day-col" data-day="fri"><div class="day-head">FRI 24</div></div>
+      </div>
+
+      <div class="legend">
+        <span><span class="sw deep"></span>Deep · writing/analysis</span>
+        <span><span class="sw lab"></span>Lab · bench work</span>
+        <span><span class="sw light"></span>Light · admin/short tasks</span>
+        <span><span class="sw meeting"></span>Meetings/rituals</span>
+      </div>
+
+      <div class="impact-panel" id="impact">
+        <h3>Cascade preview</h3>
+        <div id="impactBody"></div>
+        <div class="buttons">
+          <button class="compress" onclick="commitMove('compress')">Compress downstream</button>
+          <button class="accept" onclick="commitMove('accept')">Accept the slip</button>
+          <button class="cut" onclick="commitMove('cut')">Cut scope</button>
+          <button class="cancel" onclick="cancelMove()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="backlog">
+        <h3>Backlog — 3 unscheduled</h3>
+        <div class="backlog-item deep" draggable="true" data-id="bl-fig4">
+          <strong>Figure 4 v1</strong>
+          <div class="task-chain">TNF › Figures v3 › Q2 draft</div>
+          <div class="tiny muted">Deep · 2.5h estimate</div>
+        </div>
+        <div class="backlog-item lab" draggable="true" data-id="bl-assay">
+          <strong>Dose-response replicate</strong>
+          <div class="task-chain">TNF › Results drafted › Q2 draft</div>
+          <div class="tiny muted">Lab · 3h estimate</div>
+        </div>
+        <div class="backlog-item deep" draggable="true" data-id="bl-aim3">
+          <strong>R01 Aim 3 draft</strong>
+          <div class="task-chain">R01 › Aim 3 outline › Q2 outline</div>
+          <div class="tiny muted">Deep · 2h estimate</div>
+        </div>
+      </div>
+
+      <div class="card mt-16">
+        <h2>Rules the mover checks</h2>
+        <ul style="list-style:none; padding-left:0; font-size:12px; color:var(--ink);">
+          <li style="padding:4px 0; border-bottom:1px solid var(--line);">1. Block type match (writing → Deep)</li>
+          <li style="padding:4px 0; border-bottom:1px solid var(--line);">2. Task dependencies respected</li>
+          <li style="padding:4px 0; border-bottom:1px solid var(--line);">3. Downstream cascade resolved</li>
+          <li style="padding:4px 0; border-bottom:1px solid var(--line);">4. Checkpoint DoD dates held</li>
+          <li style="padding:4px 0;">5. No 3+ Deep blocks stacked</li>
+        </ul>
+      </div>
+
+      <div class="card mt-16">
+        <h2>Or say it in Claude</h2>
+        <pre class="mono" style="font-size:11px; background:#f1f5f9; padding:10px; border-radius:4px; white-space:pre-wrap;">> slip the TNF methods
+>  block to Thursday
+
+Claude: That cascades Results
+draft and Figures v3 — two
+days of slack left. Confirm?</pre>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  The adjuster (<code>tools/planner/adjust.js</code> in a live repo) runs the same checks whether you drag here, submit a Move-block issue, or ask Claude in chat.
+</footer>
+
+<script>
+  // Seed blocks. Each = day, startHour (0 = 9am), durationHours, type, task, project, chainShort
+  const SEED_BLOCKS = [
+    // Monday
+    { id: 'mon-1', day: 'mon', t: 0,   dur: 2,   type: 'deep',    task: 'Methods intro',  meta: 'TNF · 2h' },
+    { id: 'mon-2', day: 'mon', t: 4,   dur: 1,   type: 'meeting', task: 'Lab meeting',    meta: '1h', fixed: true },
+    { id: 'mon-3', day: 'mon', t: 6,   dur: 1.5, type: 'lab',     task: 'MCF-7 passage',  meta: 'Maint · 1.5h' },
+    { id: 'mon-4', day: 'mon', t: 8,   dur: 1,   type: 'light',   task: 'Email + admin',  meta: '1h' },
+
+    // Tuesday (today)
+    { id: 'tue-1', day: 'tue', t: 0,   dur: 2,   type: 'deep',    task: 'Methods revise', meta: 'TNF · 2h' },
+    { id: 'tue-2', day: 'tue', t: 5,   dur: 2,   type: 'lab',     task: 'Media v2',       meta: 'Organoid · 2h' },
+    { id: 'tue-3', day: 'tue', t: 7.25, dur: 0.75, type: 'meeting', task: '1:1 Sara',     meta: '45m', fixed: true },
+
+    // Wednesday
+    { id: 'wed-1', day: 'wed', t: 0,   dur: 2.5, type: 'deep',    task: 'Results draft',  meta: 'TNF · 2.5h' },
+    { id: 'wed-2', day: 'wed', t: 5,   dur: 3,   type: 'lab',     task: 'Dose-response',  meta: 'TNF · 3h' },
+
+    // Thursday
+    { id: 'thu-1', day: 'thu', t: 0,   dur: 2,   type: 'deep',    task: 'Methods polish', meta: 'TNF · 2h' },
+    { id: 'thu-2', day: 'thu', t: 5,   dur: 1.5, type: 'lab',     task: 'Assay prep',     meta: 'Organoid · 1.5h' },
+    { id: 'thu-3', day: 'thu', t: 7,   dur: 0.5, type: 'meeting', task: '1:1 Ravi',       meta: '30m', fixed: true },
+
+    // Friday
+    { id: 'fri-1', day: 'fri', t: 0,   dur: 2,   type: 'deep',    task: 'Intro polish',   meta: 'TNF · 2h' },
+    { id: 'fri-2', day: 'fri', t: 5,   dur: 1,   type: 'lab',     task: 'Passage',        meta: 'Maint · 1h' },
+    { id: 'fri-3', day: 'fri', t: 6.5, dur: 0.5, type: 'meeting', task: '/digest',        meta: '30m', fixed: true },
+    { id: 'fri-4', day: 'fri', t: 7.5, dur: 0.5, type: 'meeting', task: '/retro',         meta: '30m', fixed: true },
+  ];
+
+  const HOUR_PX = 60;           // matches .time-label height
+  const DAY_HEAD_PX = 38;
+  const DAYS = ['mon','tue','wed','thu','fri'];
+  let blocks = JSON.parse(JSON.stringify(SEED_BLOCKS));
+  let pendingMove = null;
+
+  function render() {
+    DAYS.forEach(d => {
+      const col = document.querySelector(`.day-col[data-day="${d}"]`);
+      // clear existing blocks
+      col.querySelectorAll('.block').forEach(n => n.remove());
+    });
+    blocks.forEach(b => renderBlock(b));
+  }
+
+  function renderBlock(b) {
+    const col = document.querySelector(`.day-col[data-day="${b.day}"]`);
+    if (!col) return;
+    const el = document.createElement('div');
+    el.className = 'block ' + b.type + (b.fixed ? ' fixed' : '') + (b.ghost ? ' ghost' : '');
+    el.style.top = (DAY_HEAD_PX + b.t * HOUR_PX) + 'px';
+    el.style.height = (b.dur * HOUR_PX - 4) + 'px';
+    el.innerHTML = `<div class="task">${b.task}</div><div class="meta">${b.meta}</div>`;
+    el.dataset.id = b.id;
+    if (!b.fixed) {
+      el.draggable = true;
+      el.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', b.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      el.addEventListener('click', () => openActionSheet(b));
+    }
+    col.appendChild(el);
+  }
+
+  DAYS.forEach(d => {
+    const col = document.querySelector(`.day-col[data-day="${d}"]`);
+    col.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    col.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const rect = col.getBoundingClientRect();
+      const yInCol = e.clientY - rect.top - DAY_HEAD_PX;
+      const hour = Math.max(0, Math.round(yInCol / HOUR_PX * 2) / 2);   // 30-min snap
+      proposeMove(id, d, hour);
+    });
+  });
+
+  // Backlog drag
+  document.querySelectorAll('.backlog-item').forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', 'BACKLOG:' + item.dataset.id);
+    });
+  });
+
+  function proposeMove(id, toDay, toHour) {
+    if (id.startsWith('BACKLOG:')) {
+      // new block from backlog
+      const blId = id.slice(8);
+      const tpl = {
+        'bl-fig4':  { type: 'deep', dur: 2.5, task: 'Figure 4 v1',          meta: 'TNF · 2.5h' },
+        'bl-assay': { type: 'lab',  dur: 3,   task: 'Dose-response rep',    meta: 'TNF · 3h' },
+        'bl-aim3':  { type: 'deep', dur: 2,   task: 'R01 Aim 3 draft',      meta: 'R01 · 2h' },
+      }[blId];
+      if (!tpl) return;
+      const newBlock = Object.assign({ id: blId, day: toDay, t: toHour }, tpl);
+      pendingMove = { kind: 'add', newBlock };
+      showImpact({
+        kind: 'add',
+        task: tpl.task,
+        target: `${toDay.toUpperCase()} ${hourLabel(toHour)}`,
+        warnings: matchWarn(tpl.type, toHour, toDay),
+        cascades: [],
+        statusFlips: [],
+      });
+      return;
+    }
+    const src = blocks.find(b => b.id === id);
+    if (!src || src.fixed) return;
+    if (src.day === toDay && Math.abs(src.t - toHour) < 0.25) return; // no-op
+
+    // compute cascade (simplified demo logic)
+    const newBlocks = JSON.parse(JSON.stringify(blocks));
+    const moving = newBlocks.find(b => b.id === id);
+    const prevPos = { day: moving.day, t: moving.t };
+    moving.day = toDay;
+    moving.t = toHour;
+
+    // naive cascade: any non-fixed block in same day that overlaps the new slot gets bumped +1h
+    let cascades = [];
+    const overlapping = newBlocks.filter(b =>
+      b.id !== id && !b.fixed && b.day === toDay &&
+      !(moving.t + moving.dur <= b.t || b.t + b.dur <= moving.t)
+    );
+    overlapping.forEach(b => {
+      const origT = b.t;
+      b.t = moving.t + moving.dur + 0.25;
+      cascades.push({ task: b.task, from: hourLabel(origT), to: hourLabel(b.t) });
+    });
+
+    // checkpoint impact (demo)
+    const statusFlips = [];
+    if (src.task.toLowerCase().includes('method')) {
+      statusFlips.push({ label: 'Q2 Objective — TNF draft complete', from: 'green', to: 'amber', note: 'on track → watch' });
+    }
+
+    pendingMove = { kind: 'move', id, prevPos, newBlocks };
+    showImpact({
+      kind: 'move',
+      task: moving.task,
+      target: `${toDay.toUpperCase()} ${hourLabel(toHour)}`,
+      warnings: matchWarn(moving.type, toHour, toDay),
+      cascades,
+      statusFlips,
+    });
+
+    // render ghost of original position + new position
+    blocks = newBlocks.map(b => Object.assign({}, b));
+    // add ghost
+    blocks.push(Object.assign({}, src, { id: src.id + '-ghost', ghost: true, day: prevPos.day, t: prevPos.t }));
+    render();
+  }
+
+  function matchWarn(type, t, day) {
+    const warnings = [];
+    // Deep blocks should be in morning (before 12)
+    if (type === 'deep' && t >= 4) {
+      warnings.push('Deep block placed in afternoon — writing usually wants 9–12.');
+    }
+    // Lab on a Mon lab-meeting day
+    return warnings;
+  }
+
+  function showImpact({ kind, task, target, warnings, cascades, statusFlips }) {
+    const body = document.getElementById('impactBody');
+    let html = `<div class="impact-row"><span class="label">Moving</span><strong>${task}</strong><span>→ ${target}</span></div>`;
+    cascades.forEach(c => {
+      html += `<div class="impact-row"><span class="label">Cascades</span><span>${c.task}</span><span>${c.from} → ${c.to}</span></div>`;
+    });
+    statusFlips.forEach(f => {
+      const dot1 = f.from === 'green' ? '🟢' : f.from === 'amber' ? '🟡' : '🔴';
+      const dot2 = f.to   === 'green' ? '🟢' : f.to   === 'amber' ? '🟡' : '🔴';
+      html += `<div class="impact-row"><span class="label">${f.label}</span><span>${dot1} → ${dot2}</span><span>${f.note}</span></div>`;
+    });
+    warnings.forEach(w => {
+      html += `<div class="impact-row"><span class="label" style="color:var(--amber)">⚠ Warning</span><span colspan="2" style="color:#fde68a">${w}</span></div>`;
+    });
+    if (cascades.length === 0 && statusFlips.length === 0 && warnings.length === 0) {
+      html += `<div class="impact-row"><span class="label">Impact</span><span>No downstream effect — safe to commit.</span></div>`;
+    }
+    body.innerHTML = html;
+    document.getElementById('impact').classList.add('open');
+  }
+
+  function commitMove(strategy) {
+    // remove ghosts
+    blocks = blocks.filter(b => !b.ghost);
+    cancelMove();
+    render();
+    // in a real system: open a pre-filled GitHub issue (Move Block form) here
+    flash(`Committed (${strategy}). In a live repo: GitHub Issue → Action → markdown commit → page rebuild.`);
+  }
+
+  function cancelMove() {
+    document.getElementById('impact').classList.remove('open');
+    if (pendingMove && pendingMove.kind === 'move') {
+      // revert
+      blocks = JSON.parse(JSON.stringify(SEED_BLOCKS));
+      render();
+    }
+    if (pendingMove && pendingMove.kind === 'add') {
+      blocks = blocks.filter(b => !b.ghost);
+      render();
+    }
+    pendingMove = null;
+  }
+
+  function hourLabel(h) {
+    const hh = 9 + Math.floor(h);
+    const mm = (h % 1) >= 0.5 ? '30' : '00';
+    return `${hh}:${mm}`;
+  }
+
+  function flash(msg) {
+    const banner = document.createElement('div');
+    banner.textContent = msg;
+    banner.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
+    document.body.appendChild(banner);
+    setTimeout(() => banner.remove(), 3500);
+  }
+
+  function openActionSheet(b) {
+    // show action sheet (mobile)
+    const sheet = document.createElement('div');
+    sheet.className = 'action-sheet open';
+    sheet.innerHTML = `
+      <div class="title">${b.task} <span class="muted small">(${b.meta})</span></div>
+      <button onclick="document.querySelector('.action-sheet').remove();">Move — drag or pick new slot</button>
+      <button onclick="document.querySelector('.action-sheet').remove();">Resize</button>
+      <button onclick="document.querySelector('.action-sheet').remove();">Mark done</button>
+      <button onclick="document.querySelector('.action-sheet').remove();">Split into two</button>
+      <button class="danger" onclick="document.querySelector('.action-sheet').remove();">Unschedule (→ backlog)</button>
+    `;
+    document.body.appendChild(sheet);
+  }
+
+  let todayIdx = 1; // Tuesday
+  function shiftDay(delta) {
+    todayIdx = (todayIdx + delta + DAYS.length) % DAYS.length;
+    document.querySelectorAll('.day-col').forEach(c => c.classList.remove('today'));
+    const target = document.querySelector(`.day-col[data-day="${DAYS[todayIdx]}"]`);
+    target.classList.add('today');
+    const labels = ['Monday Apr 20','Tuesday Apr 21','Wednesday Apr 22','Thursday Apr 23','Friday Apr 24'];
+    document.getElementById('dayLabel').textContent = labels[todayIdx];
+  }
+
+  render();
+</script>
+
+</body>
+</html>

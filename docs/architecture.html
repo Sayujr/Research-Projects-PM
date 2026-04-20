@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .arch-svg { width: 100%; max-width: 900px; height: auto; display: block; margin: 0 auto 20px; }
+  .arch-box {
+    background: #fff; border: 1px solid var(--line);
+    border-radius: var(--r); padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .flow-step {
+    display: grid; grid-template-columns: 40px 1fr;
+    gap: 12px; margin-bottom: 16px;
+  }
+  .flow-step .num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--teal); color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .flow-step h3 { margin-bottom: 4px; font-size: 15px; color: var(--navy); }
+  .flow-step p { color: var(--ink); font-size: 13px; line-height: 1.5; }
+  .flow-step code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+  .faq summary {
+    font-weight: 600; color: var(--navy);
+    padding: 10px 0; cursor: pointer;
+    border-bottom: 1px solid var(--line);
+    font-size: 14px;
+  }
+  .faq[open] summary { color: var(--teal); }
+  .faq p { padding: 8px 0 12px; font-size: 13px; color: var(--ink); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html" class="active">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>How it works</h1>
+    <div class="subtitle">Three components. One source of truth. Zero custom backend.</div>
+  </div>
+
+  <!-- Architecture diagram as SVG -->
+  <div class="card">
+    <h2>The architecture in one picture</h2>
+    <svg class="arch-svg" viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        .box { fill: #fff; stroke: #d1d5db; stroke-width: 1.5; rx: 8; }
+        .box-navy { fill: #1a2332; }
+        .box-teal { fill: #2d7a7a; }
+        .label-l { font: 700 13px "Segoe UI", sans-serif; fill: #1a2332; }
+        .label-w { font: 700 13px "Segoe UI", sans-serif; fill: #fff; }
+        .label-s { font: 11px "Segoe UI", sans-serif; fill: #6b7280; }
+        .label-sw { font: 11px "Segoe UI", sans-serif; fill: #d1d5db; }
+        .arrow { stroke: #2d7a7a; stroke-width: 2; fill: none; marker-end: url(#head); }
+        .arrow-d { stroke-dasharray: 4 4; }
+      </style>
+      <defs>
+        <marker id="head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M0,0 L10,5 L0,10 Z" fill="#2d7a7a"/>
+        </marker>
+      </defs>
+
+      <!-- Center: git repo (markdown) -->
+      <rect class="box box-navy" x="340" y="140" width="220" height="110" rx="8"/>
+      <text class="label-w" x="450" y="170" text-anchor="middle">GitHub repo</text>
+      <text class="label-sw" x="450" y="190" text-anchor="middle">(source of truth)</text>
+      <text class="label-sw" x="450" y="215" text-anchor="middle" style="font-family:Menlo,monospace;">projects/*.md</text>
+      <text class="label-sw" x="450" y="230" text-anchor="middle" style="font-family:Menlo,monospace;">progress/*.md · people.md</text>
+
+      <!-- Left: Website -->
+      <rect class="box" x="40" y="40" width="220" height="90" rx="8"/>
+      <text class="label-l" x="150" y="70" text-anchor="middle">Website (docs/)</text>
+      <text class="label-s" x="150" y="90" text-anchor="middle">dashboard · Plan Board · Gantt</text>
+      <text class="label-s" x="150" y="108" text-anchor="middle">GitHub Pages · mobile OK</text>
+
+      <!-- Right: Claude Code -->
+      <rect class="box" x="640" y="40" width="220" height="90" rx="8"/>
+      <text class="label-l" x="750" y="70" text-anchor="middle">Claude Code</text>
+      <text class="label-s" x="750" y="90" text-anchor="middle">on her laptop</text>
+      <text class="label-s" x="750" y="108" text-anchor="middle">/standup · /week-plan · /digest</text>
+
+      <!-- Left bottom: Mobile input -->
+      <rect class="box" x="40" y="260" width="220" height="90" rx="8"/>
+      <text class="label-l" x="150" y="290" text-anchor="middle">Mobile input</text>
+      <text class="label-s" x="150" y="310" text-anchor="middle">Issue forms (phase 1)</text>
+      <text class="label-s" x="150" y="328" text-anchor="middle">PWA + OAuth (phase 2)</text>
+
+      <!-- Right bottom: Integrations -->
+      <rect class="box" x="640" y="260" width="220" height="90" rx="8"/>
+      <text class="label-l" x="750" y="290" text-anchor="middle">Integrations</text>
+      <text class="label-s" x="750" y="310" text-anchor="middle">Email digest · Slack alerts</text>
+      <text class="label-s" x="750" y="328" text-anchor="middle">Google + Outlook calendar</text>
+
+      <!-- Arrows -->
+      <!-- Website reads from repo -->
+      <path class="arrow" d="M 340 170 Q 300 170 260 110"/>
+      <text class="label-s" x="285" y="155" text-anchor="middle" fill="#2d7a7a">reads</text>
+
+      <!-- Mobile writes to repo -->
+      <path class="arrow" d="M 260 290 Q 320 230 340 220"/>
+      <text class="label-s" x="305" y="275" text-anchor="middle" fill="#2d7a7a">commits</text>
+
+      <!-- Claude reads + writes repo -->
+      <path class="arrow" d="M 640 95 Q 600 170 560 180"/>
+      <text class="label-s" x="620" y="140" text-anchor="middle" fill="#2d7a7a">read · commit</text>
+
+      <!-- Integrations read from repo (nightly actions) -->
+      <path class="arrow" d="M 560 220 Q 620 290 640 290"/>
+      <text class="label-s" x="615" y="265" text-anchor="middle" fill="#2d7a7a">actions</text>
+
+      <!-- Website rebuilds on push -->
+      <path class="arrow arrow-d" d="M 450 140 Q 300 60 260 75"/>
+    </svg>
+    <p class="small muted text-right">Solid arrows = real writes. Dashed = Pages rebuild on push.</p>
+  </div>
+
+  <!-- The two main questions -->
+  <div class="two-col">
+    <div class="card">
+      <h2>How does Claude get instructions?</h2>
+      <p>Claude Code reads these three things when it opens this repo:</p>
+      <table class="flow-table mt-16">
+        <tr><th>File</th><th>Does what</th></tr>
+        <tr>
+          <td><code>CLAUDE.md</code></td>
+          <td>Loads the six principles, tone rules, priority order, data model. Every session starts with this.</td>
+        </tr>
+        <tr>
+          <td><code>.claude/commands/*.md</code></td>
+          <td>One file per slash command. <code>/standup</code>, <code>/week-plan</code>, <code>/digest</code>, <code>/retro</code>, <code>/newcheckpoint</code>, <code>/logwin</code>, <code>/one-on-one</code>, <code>/report</code>, <code>/move</code>, <code>/onboard</code>.</td>
+        </tr>
+        <tr>
+          <td><code>.claude/settings.json</code></td>
+          <td>SessionStart hook auto-runs <code>/standup</code> once per day. Permissions for calendar + email tools.</td>
+        </tr>
+      </table>
+      <p class="mt-16">
+        <strong>Promises made on paper → file on disk.</strong> When the deck says "/standup shows today's 3 + overdue + calendar shape," that structure lives in <code>.claude/commands/standup.md</code>. Claude reads it and produces that structure.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>How do website changes reach Claude?</h2>
+      <p>Not directly. Via the repo.</p>
+      <ol style="margin-left: 18px; margin-top: 10px; font-size: 13px;">
+        <li style="margin-bottom: 6px;">You do something on the website (move a block, log a win).</li>
+        <li style="margin-bottom: 6px;"><strong>Phase 1:</strong> the action opens a pre-filled GitHub Issue. A GitHub Action parses it and commits the markdown change.</li>
+        <li style="margin-bottom: 6px;"><strong>Phase 2:</strong> the PWA commits directly via the GitHub REST API (OAuth device flow).</li>
+        <li style="margin-bottom: 6px;">Next time you open Claude Code, it reads the updated markdown.</li>
+      </ol>
+      <p class="small muted mt-16">
+        Eventual consistency, not live. If you drag a block on your phone and immediately open Claude on your laptop, Claude sees it. There's no realtime socket between the two.
+      </p>
+    </div>
+  </div>
+
+  <!-- Data flow steps -->
+  <div class="card">
+    <h2>A day, end-to-end</h2>
+    <div class="flow-step">
+      <div class="num">1</div>
+      <div>
+        <h3>9:00 — you open Claude Code</h3>
+        <p>SessionStart hook fires. Checks if <code>/standup</code> has run today. It hasn't. Runs it. Claude reads <code>week-plans/2026-W17.md</code>, <code>projects/*.md</code>, <code>progress/2026-04.md</code>, <code>calendar/2026-04.md</code>, <code>goals.md</code>, <code>people.md</code>. Produces the standup card you see on the Standup page.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="num">2</div>
+      <div>
+        <h3>9:02 — you confirm and start writing</h3>
+        <p>Protected 09:00–11:00 Deep block is on your calendar (Claude wrote it there when you approved this week's plan on Monday).</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="num">3</div>
+      <div>
+        <h3>11:15 — new meeting lands on your work calendar</h3>
+        <p>Nightly sync isn't running yet, but on next sync it sees the conflict with tomorrow's writing block. Re-shuffles the week, flags it in tomorrow's standup: <em>"Wed writing block clobbered by new meeting — moved to Thu morning. OK?"</em></p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="num">4</div>
+      <div>
+        <h3>14:00 — on the bus, you tap the phone</h3>
+        <p>Website in a browser (mobile-friendly). You log the passage on the Plan Board — "+ Log passage" opens a pre-filled GitHub Issue. Submit. Action runs, commits <code>progress/2026-04.md</code>.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="num">5</div>
+      <div>
+        <h3>16:15 — 1:1 with Sara starts</h3>
+        <p>Agenda from <code>meetings/2026-04-21-1on1-sara.md</code>, drafted from her owes-me list + recent progress. You add notes during the meeting. On close, Claude extracts action items back into <code>people.md</code> (owes-me / I-owe updated).</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <div class="num">6</div>
+      <div>
+        <h3>Friday afternoon</h3>
+        <p><code>/digest</code>: names shipped items from the week's progress log. <code>/retro</code>: notes what slipped, one adjustment for next week. Both written to <code>retros/2026-W17.md</code>. Optional: emails a weekly collaborator report to Prof Smith (scheduled action, Resend/SES).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- What files would be in a live repo -->
+  <div class="card">
+    <h2>What the live repo contains</h2>
+    <pre class="frontmatter" style="font-size: 11px; line-height: 1.5;">research-pm/
+├── CLAUDE.md                        # how Claude should behave
+├── .claude/
+│   ├── settings.json                # SessionStart hook + permissions
+│   └── commands/                    # slash command definitions
+│       ├── standup.md
+│       ├── week-plan.md
+│       ├── digest.md
+│       ├── retro.md
+│       ├── newcheckpoint.md
+│       ├── logwin.md
+│       ├── one-on-one.md
+│       ├── report.md
+│       ├── move.md
+│       └── onboard.md
+├── .github/
+│   ├── workflows/
+│   │   ├── build-site.yml           # markdown → docs/data.json, Pages
+│   │   ├── parse-issue.yml          # issue form → markdown commit
+│   │   └── nightly-sync.yml         # calendar sync, conflict check
+│   └── ISSUE_TEMPLATE/
+│       ├── log-win.yml
+│       ├── log-passage.yml
+│       ├── move-block.yml
+│       └── new-checkpoint.yml
+├── projects/
+│   ├── tnf-paper.md
+│   ├── organoid.md
+│   └── r01-renewal.md
+├── progress/2026-04.md
+├── meetings/2026-04-21-1on1-sara.md
+├── week-plans/2026-W17.md
+├── tasks/*.md
+├── calendar/2026-04.md
+├── people.md
+├── goals.md
+├── dashboard.md                     # auto-regenerated
+├── retros/2026-W17.md
+├── portfolio-reviews/2026-04.md
+├── okr-reviews/2026-Q2.md
+├── exports/
+│   ├── 2026-W17-tnf-for-prof-smith.md
+│   └── 2026-W17-tnf-for-prof-smith.email.md
+├── meta/
+│   └── task-history.json            # duration-learning state
+├── tools/
+│   └── planner/adjust.js            # the cascade adjuster
+└── docs/                            # the website (this)</pre>
+  </div>
+
+  <div class="card">
+    <h2>FAQ</h2>
+
+    <details class="faq" open>
+      <summary>Do I need a paid Claude plan?</summary>
+      <p>Any Claude Code-supported plan works (individual or team). Claude Code itself is free to install. No API keys to manage separately — Claude handles auth.</p>
+    </details>
+
+    <details class="faq">
+      <summary>What about my collaborators — do they need accounts?</summary>
+      <p>No. Claude generates reports (markdown / email / slide-ready) that you send. The website is optional-access with a Cloudflare Access password gate if you want selective sharing.</p>
+    </details>
+
+    <details class="faq">
+      <summary>Where does the data live?</summary>
+      <p>In markdown files in a git repo, which you own. Nothing lives in a vendor database. If you stop using the tool, your project history is already portable.</p>
+    </details>
+
+    <details class="faq">
+      <summary>What costs money?</summary>
+      <p>Claude account (what you pay for anyway), GitHub (free for up to 3 private collaborators or unlimited public), domain if you want one. Cloudflare Access free tier covers up to 50 users. Calendar API is free. Email digests via Resend/SES free tier.</p>
+    </details>
+
+    <details class="faq">
+      <summary>What can break?</summary>
+      <p>Mostly integrations: calendar OAuth can expire (Claude re-prompts in next session); issue-form Action fails occasionally on malformed input (shows up as a comment on the issue). Core flow — markdown ↔ Claude chat — has no failure modes beyond git itself.</p>
+    </details>
+
+    <details class="faq">
+      <summary>Is the website authoritative, or is Claude?</summary>
+      <p>Neither. The <strong>markdown files</strong> are authoritative. Website and Claude are two clients on the same data.</p>
+    </details>
+  </div>
+</main>
+
+<footer>
+  Want the setup steps? → <a href="setup.html">Setup page</a>
+</footer>
+
+</body>
+</html>

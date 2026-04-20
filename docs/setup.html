@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .big-step {
+    display: grid; grid-template-columns: 50px 1fr;
+    gap: 16px; margin-bottom: 24px;
+    align-items: flex-start;
+  }
+  .big-step .num {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teal); color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 18px;
+  }
+  .big-step h3 { font-size: 18px; color: var(--navy); margin-bottom: 6px; }
+  .big-step p { font-size: 14px; line-height: 1.5; color: var(--ink); }
+
+  .prompt-box {
+    position: relative;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 24px 20px;
+    border-radius: var(--r);
+    margin: 12px 0 8px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+    overflow-x: auto;
+  }
+  .prompt-box pre { white-space: pre-wrap; }
+  .copy-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    padding: 6px 12px;
+    background: var(--teal);
+    color: #fff; border: none;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+  }
+  .copy-btn:hover { filter: brightness(1.1); }
+  .copy-btn.copied { background: var(--green); }
+
+  .alt-path {
+    background: #fef3c7;
+    border-left: 3px solid var(--amber);
+    padding: 10px 14px;
+    font-size: 12.5px;
+    border-radius: 4px;
+    margin-top: 12px;
+  }
+
+  .first-session {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 16px 20px;
+  }
+  .first-session .dialog-line {
+    display: grid; grid-template-columns: 70px 1fr; gap: 10px;
+    padding: 6px 0; font-size: 13px;
+  }
+  .first-session .dialog-line .who {
+    font-weight: 700; color: var(--teal); font-size: 11px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .first-session .dialog-line.user .who { color: var(--navy); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <a href="setup.html" class="active">Setup</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Setup — one paste, one conversation</h1>
+    <div class="subtitle">You already have Claude Code. Paste the prompt below once. Claude does the rest — clones the repo, checks the setup, starts the onboarding interview.</div>
+  </div>
+
+  <div class="banner">
+    Prerequisites: a Claude account (any paid plan) and Claude Code installed. That's it. No git commands to memorise, no <code>npm install</code>, no env vars.
+  </div>
+
+  <div class="big-step">
+    <div class="num">1</div>
+    <div>
+      <h3>Open Claude Code on your laptop</h3>
+      <p>
+        Any folder — it doesn't matter where. Just run <code>claude</code> in a terminal. Claude Code is free to install from <a href="https://claude.ai/code" target="_blank">claude.ai/code</a>. If you already use it, you're fine.
+      </p>
+    </div>
+  </div>
+
+  <div class="big-step">
+    <div class="num">2</div>
+    <div>
+      <h3>Paste this single prompt</h3>
+      <p>Claude does every other setup step. It will ask permission before cloning or writing files.</p>
+
+      <div class="prompt-box">
+        <button class="copy-btn" id="copyBtn" onclick="copyPrompt()">Copy</button>
+<pre id="promptText">Set up research-pm for me on this machine.
+
+Steps:
+1. Clone https://github.com/OWNER/Research-Projects-PM.git into ~/research-pm
+   (pick a sensible location if that's taken; confirm with me first).
+2. cd into the cloned repo.
+3. Read CLAUDE.md so you understand the philosophy, slash commands, and tone.
+   Load the principles (six design rules) and the goal cascade (year → quarter
+   → project → week → today) into working memory.
+4. Confirm the six design rules back to me in one paragraph, plainly, so I
+   know you've loaded them.
+5. Start the onboarding interview (stage 1 of 8: role + year goals). Run it
+   conversationally, one question at a time — do not dump all 8 stages at once.
+   Spread the rest of the stages over future sessions.
+6. After stage 1, commit any new files (e.g. goals.md scaffolding) locally.
+   Do not push to GitHub without asking me.
+
+From now on:
+- Every new session: run /standup automatically (SessionStart hook should do
+  this; if it doesn't, run /standup manually).
+- When I log work, append to progress/YYYY-MM.md with the date, project,
+  note, and duration if I gave one. Never lose a duration estimate —
+  it feeds meta/task-history.json.
+- When I ask anything project-management-related, decide on my behalf
+  following the fixed priority order (deadlines &gt; writing &gt; unblock team
+  &gt; perishable lab &gt; experiments &gt; admin). Only ask when the choice is
+  genuinely mine alone.
+- Keep responses short unless I ask for depth. Evidence-based praise only.
+  No "great work" without naming what actually shipped.
+
+Ready? Start with step 1.</pre>
+      </div>
+      <p class="small muted">This prompt is also stored in this repo at <code>setup-prompt.md</code>. If you want to tweak it before pasting, edit there.</p>
+
+      <div class="alt-path">
+        <strong>Don't have Claude Code open?</strong> Install it first: <a href="https://claude.ai/code" target="_blank">claude.ai/code</a> → sign in → you're done. Then paste the above in the first chat window.
+      </div>
+    </div>
+  </div>
+
+  <div class="big-step">
+    <div class="num">3</div>
+    <div>
+      <h3>Have a short conversation (≈ 5 minutes)</h3>
+      <p>Claude runs stage 1 of the onboarding interview: your role, research focus, and the 3–5 outcomes that would make 2026 a great year. Plain English, one question at a time.</p>
+
+      <div class="first-session">
+        <div class="dialog-line user"><div class="who">You</div><div>[paste the prompt above]</div></div>
+        <div class="dialog-line"><div class="who">Claude</div><div>I'll clone <code>github.com/OWNER/Research-Projects-PM</code> into <code>~/research-pm</code> — OK?</div></div>
+        <div class="dialog-line user"><div class="who">You</div><div>yes</div></div>
+        <div class="dialog-line"><div class="who">Claude</div><div>Cloned. Principles loaded. Six design rules, in plain English: …[summary]…<br><br>Onboarding — stage 1. What's your role, and what would make 2026 a great year? 3 to 5 things, specific.</div></div>
+        <div class="dialog-line user"><div class="who">You</div><div>Research associate, cell culture lab. Three things: publish the TNF paper to Cell Reports, establish an organoid model, submit the R01 renewal.</div></div>
+        <div class="dialog-line"><div class="who">Claude</div><div>Good. Each of those needs a measurable "done" — a date and a condition. TNF paper: by when, and "submitted" or "accepted"?</div></div>
+        <div class="dialog-line" style="color: var(--muted); font-style: italic;">
+          <div class="who">·</div>
+          <div>(conversation continues, ~8 turns total for stage 1)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="big-step">
+    <div class="num">4</div>
+    <div>
+      <h3>Over the next few days, Claude runs the other 7 stages</h3>
+      <p>One stage per session. Projects, team, typical week shape, task durations, calendars, full goal cascade, preferences. By end of week 1, the tool is calibrated to you.</p>
+      <ul class="small" style="margin-left:18px; margin-top:10px; color:var(--ink);">
+        <li style="margin-bottom:4px;">Stage 2 — active projects (one-liners + collaborators + deadlines)</li>
+        <li style="margin-bottom:4px;">Stage 3 — team (postdocs / techs / students)</li>
+        <li style="margin-bottom:4px;">Stage 4 — typical week shape + lab hours</li>
+        <li style="margin-bottom:4px;">Stage 5 — task duration estimates (seeds duration learning)</li>
+        <li style="margin-bottom:4px;">Stage 6 — calendar platforms (Google + Outlook)</li>
+        <li style="margin-bottom:4px;">Stage 7 — goals broken into quarterly OKRs or narratives</li>
+        <li>Stage 8 — preferences (nudge hours, motivation tone, notification channels)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>What the prompt makes Claude do</h2>
+      <p style="font-size:13px;">Load the philosophy, scaffold the files, run the interview. Every file touch happens on your laptop; nothing is copied to the cloud until you commit + push.</p>
+      <ul style="margin-left:18px; font-size:12.5px; margin-top:10px;">
+        <li style="margin-bottom:4px;">Clone the repo</li>
+        <li style="margin-bottom:4px;">Read <code>CLAUDE.md</code> — six principles, goal cascade, tone</li>
+        <li style="margin-bottom:4px;">Confirm back so you know it loaded</li>
+        <li style="margin-bottom:4px;">Start stage 1 of onboarding</li>
+        <li style="margin-bottom:4px;">Set up the SessionStart hook so every future session opens with <code>/standup</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h2>Website + Claude — do I need both?</h2>
+      <p style="font-size:13px;">No. Claude Code alone is enough. The website is a visual layer for:</p>
+      <ul style="margin-left:18px; font-size:12.5px; margin-top:10px;">
+        <li style="margin-bottom:4px;">Phone access to the dashboard</li>
+        <li style="margin-bottom:4px;">Collaborator view (your PI / co-authors)</li>
+        <li style="margin-bottom:4px;">Drag-drop Plan Board when a chat is clunky</li>
+      </ul>
+      <p style="font-size:13px; margin-top:10px;">
+        If you live in Claude chat, you can skip the website entirely. Dashboards still regenerate into markdown.
+      </p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Prefer the manual path? <code>git clone ... && cd research-pm && claude</code> works the same. The single-prompt path is for when you want to skip the setup narrative.
+</footer>
+
+<script>
+  function copyPrompt() {
+    navigator.clipboard.writeText(document.getElementById('promptText').textContent.trim());
+    const b = document.getElementById('copyBtn');
+    b.textContent = 'Copied ✓';
+    b.classList.add('copied');
+    setTimeout(() => { b.textContent = 'Copy'; b.classList.remove('copied'); }, 1800);
+  }
+</script>
+
+</body>
+</html>

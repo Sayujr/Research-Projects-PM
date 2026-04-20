@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .editable:hover { outline: 1px dashed var(--teal); outline-offset: 2px; cursor: text; }
+  .editable[contenteditable=true]:focus {
+    outline: 2px solid var(--teal); outline-offset: 2px; background: #fff;
+  }
+  .add-form {
+    display: grid;
+    grid-template-columns: 2fr 120px 2fr auto;
+    gap: 8px;
+    padding: 10px; background: #f8fafc;
+    border-radius: var(--r-sm); margin-top: 10px;
+  }
+  .add-form input {
+    padding: 6px 8px; border: 1px solid var(--line);
+    border-radius: 4px; font-family: inherit; font-size: 12px;
+  }
+  .add-form button {
+    padding: 6px 12px; background: var(--teal); color: #fff;
+    border: none; border-radius: 4px; font-family: inherit;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+  }
+  .add-form button:hover { filter: brightness(1.05); }
+  .mini-btn {
+    padding: 3px 8px; background: transparent; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 4px;
+    font-family: inherit; font-size: 11px; cursor: pointer;
+  }
+  .mini-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .mini-btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .status-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .status-pill.todo  { background: #f1f5f9; color: var(--muted); }
+  .status-pill.doing { background: #fef3c7; color: #92400e; }
+  .status-pill.done  { background: #dcfce7; color: #166534; }
+  .log-form {
+    display: grid;
+    grid-template-columns: 1fr 80px auto;
+    gap: 8px;
+  }
+  .log-form input {
+    padding: 8px 10px; border: 1px solid var(--line);
+    border-radius: 4px; font-family: inherit; font-size: 13px;
+  }
+  .log-form button {
+    padding: 8px 14px; background: var(--navy); color: #fff;
+    border: none; border-radius: 4px; font-family: inherit;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .reset-btn {
+    position: fixed; bottom: 16px; right: 16px;
+    padding: 8px 12px; background: #fff;
+    border: 1px solid var(--line); border-radius: var(--r-sm);
+    font-family: inherit; font-size: 11px; cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html" class="active">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1 class="editable" contenteditable="true" data-key="title">TNF paper</h1>
+    <div class="subtitle">
+      <span class="editable" contenteditable="true" data-key="tagline">First-author submission to Cell Reports, targeting Oct 2026.</span>
+    </div>
+  </div>
+
+  <div class="banner">
+    Click any text to edit. Add checkpoints, log wins, mark tasks done. Everything persists in your browser (localStorage) — <button class="mini-btn" onclick="resetAll()">Reset demo</button>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <!-- Frontmatter -->
+      <div class="card">
+        <h2>projects/tnf-paper.md — frontmatter</h2>
+        <div class="frontmatter">id: tnf-paper
+title: TNF paper
+status: active
+goal_model: okr
+deadline: 2026-10-31
+priority: 1
+collaborators: [prof-smith, sara, ravi]
+workstreams: [lab, writing, collab]
+tags: [paper, cell-reports]</div>
+        <p class="small muted">This is a real markdown file in the repo. Claude reads it to understand the project.</p>
+      </div>
+
+      <!-- Checkpoints -->
+      <div class="card">
+        <h2>Checkpoints</h2>
+        <div id="checkpoints">
+          <!-- populated by app.js -->
+        </div>
+        <div class="add-form">
+          <input type="text" id="cp-name" placeholder="Checkpoint name">
+          <input type="date" id="cp-date" value="2026-05-31">
+          <input type="text" id="cp-dod" placeholder="Definition of done">
+          <button onclick="addCheckpoint()">Add</button>
+        </div>
+      </div>
+
+      <!-- Log win form -->
+      <div class="card">
+        <h2>Log a win</h2>
+        <div class="log-form">
+          <input type="text" id="log-text" placeholder="e.g. Methods section drafted">
+          <input type="text" id="log-dur" placeholder="90m" maxlength="5">
+          <button onclick="logWin()">Log</button>
+        </div>
+        <p class="small muted mt-8">Format: <code>YYYY-MM-DD project — note (duration)</code> — appended to <code>progress/YYYY-MM.md</code>. Feeds the duration-learning table (<code>meta/task-history.json</code>).</p>
+        <div id="recent-log" class="mt-16"></div>
+      </div>
+
+      <!-- Blockers -->
+      <div class="card">
+        <h2>Blockers</h2>
+        <div id="blockers"></div>
+        <div class="add-form" style="grid-template-columns: 1fr auto;">
+          <input type="text" id="blocker-text" placeholder="Describe the blocker…">
+          <button onclick="addBlocker()">Add blocker</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Quarterly objective (OKR)</h2>
+        <p class="editable" contenteditable="true" data-key="objective" style="font-weight:600; color:var(--navy);">
+          Q2 — TNF paper draft complete, co-authors have it.
+        </p>
+        <div id="krs" class="mt-16"></div>
+      </div>
+
+      <div class="card">
+        <h2>Team</h2>
+        <div class="row">
+          <span class="dot green"></span>
+          <div>
+            <div class="name"><a href="people.html">Prof Smith</a></div>
+            <div class="meta">PI · senior author</div>
+          </div>
+        </div>
+        <div class="row">
+          <span class="dot green"></span>
+          <div>
+            <div class="name"><a href="people.html">Sara</a></div>
+            <div class="meta">postdoc · figures + replicate</div>
+          </div>
+          <span class="chip">owes 2</span>
+        </div>
+        <div class="row">
+          <span class="dot green"></span>
+          <div>
+            <div class="name"><a href="people.html">Ravi</a></div>
+            <div class="meta">postdoc · dose-response</div>
+          </div>
+          <span class="chip">owes 1</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Duration history</h2>
+        <p class="small muted mt-8">Claude's learned estimates from your past work on this project:</p>
+        <table style="width:100%; margin-top:10px; font-size:12px; border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--line);">
+              <th style="text-align:left; padding:6px 0;">Task type</th>
+              <th style="text-align:right; padding:6px 0;">Median</th>
+              <th style="text-align:right; padding:6px 0;">p90</th>
+              <th style="text-align:right; padding:6px 0;">n</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td style="padding:4px 0;">figure_draft</td><td style="text-align:right;">2h 20m</td><td style="text-align:right;">3h 30m</td><td style="text-align:right;">8</td></tr>
+            <tr><td style="padding:4px 0;">methods_section</td><td style="text-align:right;">4h 30m</td><td style="text-align:right;">6h</td><td style="text-align:right;">4</td></tr>
+            <tr><td style="padding:4px 0;">dose_response</td><td style="text-align:right;">6h</td><td style="text-align:right;">8h</td><td style="text-align:right;">6</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<button class="reset-btn" onclick="resetAll()">↺ Reset demo data</button>
+
+<footer>
+  Every edit here would commit to <code>projects/tnf-paper.md</code> via a GitHub Issue (phase 1) or the OAuth PWA (phase 2).
+</footer>
+
+<script src="app.js"></script>
+<script>
+  const STATUS_CYCLE = ['todo', 'doing', 'done'];
+
+  function renderCheckpoints() {
+    const el = document.getElementById('checkpoints');
+    const cps = state.project.checkpoints;
+    if (cps.length === 0) {
+      el.innerHTML = '<p class="small muted">No checkpoints yet. Add one below.</p>';
+      return;
+    }
+    el.innerHTML = cps.map((cp, i) => `
+      <div class="checkpoint-row">
+        <span class="dot ${cp.status === 'done' ? 'green' : cp.status === 'doing' ? 'amber' : 'muted'}"></span>
+        <div>
+          <div class="name editable" contenteditable="true" onblur="updateCp(${i}, 'name', this.textContent)">${cp.name}</div>
+          <div class="small muted editable" contenteditable="true" onblur="updateCp(${i}, 'dod', this.textContent)">DoD: ${cp.dod}</div>
+        </div>
+        <div class="date editable" contenteditable="true" onblur="updateCp(${i}, 'date', this.textContent)">${cp.date}</div>
+        <div style="display:flex; gap:4px; justify-content:flex-end;">
+          <button class="mini-btn" onclick="cycleStatus(${i})"><span class="status-pill ${cp.status}">${cp.status}</span></button>
+          <button class="mini-btn danger" onclick="removeCp(${i})">×</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderBlockers() {
+    const el = document.getElementById('blockers');
+    const bs = state.project.blockers;
+    if (bs.length === 0) {
+      el.innerHTML = '<p class="small muted">Nothing blocking. 🎉</p>';
+      return;
+    }
+    el.innerHTML = bs.map((b, i) => `
+      <div class="row" style="grid-template-columns: 16px 1fr auto;">
+        <span class="dot red"></span>
+        <div class="editable" contenteditable="true" onblur="updateBlocker(${i}, this.textContent)">${b.text}</div>
+        <button class="mini-btn danger" onclick="removeBlocker(${i})">resolve</button>
+      </div>
+    `).join('');
+  }
+
+  function renderKRs() {
+    const el = document.getElementById('krs');
+    el.innerHTML = state.project.krs.map((kr, i) => `
+      <div style="margin-bottom: 10px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px;">
+          <span class="editable" contenteditable="true" onblur="updateKR(${i}, 'label', this.textContent)">${kr.label}</span>
+          <span class="mono small">${kr.pct}%</span>
+        </div>
+        <div class="progress ${kr.pct >= 80 ? 'green' : kr.pct >= 40 ? 'amber' : 'red'}" style="margin-top:4px;">
+          <span style="width:${kr.pct}%"></span>
+        </div>
+        <input type="range" min="0" max="100" value="${kr.pct}"
+          oninput="updateKR(${i}, 'pct', +this.value)"
+          style="width:100%; margin-top:4px;">
+      </div>
+    `).join('');
+  }
+
+  function renderRecentLog() {
+    const el = document.getElementById('recent-log');
+    const logs = state.project.recentLog.slice(-5).reverse();
+    if (logs.length === 0) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="border-top:1px solid var(--line); padding-top:10px;">' +
+      '<div class="small" style="font-weight:700; color:var(--muted); margin-bottom:6px;">RECENT LOG</div>' +
+      logs.map(l => `<div class="log-entry"><div class="date">${l.date}</div><div class="body">${l.text}${l.duration ? `<span class="duration">(${l.duration})</span>` : ''}</div></div>`).join('') +
+    '</div>';
+  }
+
+  function updateCp(i, key, val) {
+    state.project.checkpoints[i][key] = val.replace(/^DoD: /, '').trim();
+    save();
+  }
+  function cycleStatus(i) {
+    const cur = state.project.checkpoints[i].status;
+    const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(cur) + 1) % STATUS_CYCLE.length];
+    state.project.checkpoints[i].status = next;
+    save(); renderCheckpoints();
+  }
+  function removeCp(i) {
+    if (!confirm('Remove this checkpoint?')) return;
+    state.project.checkpoints.splice(i, 1);
+    save(); renderCheckpoints();
+  }
+  function addCheckpoint() {
+    const name = document.getElementById('cp-name').value.trim();
+    const date = document.getElementById('cp-date').value;
+    const dod  = document.getElementById('cp-dod').value.trim();
+    if (!name) { alert('Give it a name'); return; }
+    state.project.checkpoints.push({ name, date, dod: dod || '(no DoD — Claude will ask)', status: 'todo' });
+    save(); renderCheckpoints();
+    document.getElementById('cp-name').value = '';
+    document.getElementById('cp-dod').value = '';
+  }
+
+  function logWin() {
+    const text = document.getElementById('log-text').value.trim();
+    const dur  = document.getElementById('log-dur').value.trim();
+    if (!text) return;
+    const today = new Date().toISOString().slice(0,10);
+    state.project.recentLog.push({ date: today, text, duration: dur });
+    save(); renderRecentLog();
+    document.getElementById('log-text').value = '';
+    document.getElementById('log-dur').value = '';
+  }
+
+  function addBlocker() {
+    const text = document.getElementById('blocker-text').value.trim();
+    if (!text) return;
+    state.project.blockers.push({ text });
+    save(); renderBlockers();
+    document.getElementById('blocker-text').value = '';
+  }
+  function updateBlocker(i, val) {
+    state.project.blockers[i].text = val;
+    save();
+  }
+  function removeBlocker(i) {
+    state.project.blockers.splice(i, 1);
+    save(); renderBlockers();
+  }
+
+  function updateKR(i, key, val) {
+    state.project.krs[i][key] = val;
+    save(); renderKRs();
+  }
+
+  // editable top-level fields
+  document.querySelectorAll('.editable[data-key]').forEach(el => {
+    el.addEventListener('blur', () => {
+      state.project[el.dataset.key] = el.textContent.trim();
+      save();
+    });
+  });
+
+  renderCheckpoints();
+  renderBlockers();
+  renderKRs();
+  renderRecentLog();
+</script>
+
+</body>
+</html>

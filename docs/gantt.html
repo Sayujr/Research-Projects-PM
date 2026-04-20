@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gantt — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .proj-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .proj-tabs button {
+    padding: 6px 12px; background: #fff; border: 1px solid var(--line);
+    border-radius: 16px; font-family: inherit; font-size: 12px; cursor: pointer;
+    font-weight: 600; color: var(--muted);
+  }
+  .proj-tabs button.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .gantt-chart { position: relative; background: #fff; border: 1px solid var(--line);
+    border-radius: var(--r); padding: 16px; overflow-x: auto; }
+  .gantt-row {
+    display: grid; grid-template-columns: 120px 1fr;
+    gap: 12px; align-items: center;
+    min-height: 44px;
+    border-bottom: 1px solid var(--line);
+  }
+  .gantt-row:last-child { border-bottom: none; }
+  .gantt-lane-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--ink); padding: 12px 0;
+  }
+  .gantt-track {
+    position: relative; height: 44px;
+    background: linear-gradient(to right,
+      var(--line) 0, var(--line) 1px,
+      transparent 1px, transparent calc(100% / 13)
+    );
+    background-size: calc(100% / 13) 100%;
+  }
+  .gbar {
+    position: absolute; top: 11px; height: 22px;
+    border-radius: 4px; padding: 4px 8px;
+    font-size: 11px; font-weight: 600;
+    color: #fff; background: var(--deep);
+    line-height: 14px;
+    overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    cursor: pointer;
+  }
+  .gbar:hover { filter: brightness(1.05); }
+  .gbar.done { background: #cbd5e1; color: var(--ink); }
+  .gbar.lab { background: var(--lab); }
+  .gbar.collab { background: var(--meeting); }
+  .gbar.crit { outline: 2px solid var(--red); outline-offset: -2px; }
+  .gmilestone {
+    position: absolute; top: 15px; width: 14px; height: 14px;
+    background: var(--meeting); transform: rotate(45deg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .month-axis {
+    display: grid; grid-template-columns: 120px 1fr;
+    gap: 12px; margin-bottom: 4px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .month-axis .months {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    font-size: 9.5px; font-weight: 700;
+    color: var(--muted); letter-spacing: 0.05em;
+  }
+  .month-axis .months span { border-left: 1px solid var(--line); padding: 4px 4px; }
+  .year-strip {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    padding: 14px 0;
+    margin-bottom: 12px;
+    background: var(--teal-soft);
+    border-radius: var(--r);
+  }
+  .year-strip .label { padding-left: 12px; font-size: 11px; font-weight: 700;
+    color: var(--teal); text-transform: uppercase; letter-spacing: 0.08em;
+    align-self: center; }
+  .year-strip .bars { position: relative; height: 28px; }
+  .year-bar {
+    position: absolute; top: 4px; height: 20px;
+    border-radius: 4px; background: var(--navy); color: #fff;
+    font-size: 10.5px; font-weight: 600; padding: 3px 8px;
+    line-height: 14px;
+  }
+  .click-hint {
+    background: #fef3c7; color: #92400e; padding: 8px 12px;
+    border-radius: 4px; font-size: 12px; margin-bottom: 12px;
+    border-left: 3px solid var(--amber);
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html" class="active">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Gantt — multi-level view</h1>
+    <div class="subtitle">Year goals on top, quarterly objectives in the middle, project swim lanes below. Same markdown, different zoom.</div>
+  </div>
+
+  <div class="click-hint">
+    Click a bar to edit its dates, rename, or delete. New checkpoints are added from the project page.
+  </div>
+
+  <div class="proj-tabs">
+    <button class="active" onclick="selectProj('all')">All projects</button>
+    <button onclick="selectProj('tnf')">TNF paper</button>
+    <button onclick="selectProj('organoid')">Organoid model</button>
+    <button onclick="selectProj('r01')">R01 renewal</button>
+  </div>
+
+  <!-- Year strip -->
+  <div class="year-strip">
+    <div class="label">Year 2026</div>
+    <div class="bars">
+      <div class="year-bar" style="left: 0%; width: 83%;">Publish TNF paper → Cell Reports</div>
+      <div class="year-bar" style="left: 25%; width: 50%; top: 30px; display:none;">Establish organoid model</div>
+    </div>
+  </div>
+
+  <!-- Month axis -->
+  <div class="month-axis">
+    <div></div>
+    <div class="months">
+      <span>APR</span><span>MAY</span><span>JUN</span><span>JUL</span>
+      <span>AUG</span><span>SEP</span><span>OCT</span>
+      <span style="opacity:0.5">NOV</span><span style="opacity:0.5">DEC</span>
+      <span style="opacity:0.3">(Q1'27)</span><span style="opacity:0.3"></span><span style="opacity:0.3"></span><span style="opacity:0.3"></span>
+    </div>
+  </div>
+
+  <div class="gantt-chart" id="chart">
+    <!-- Q2 block header -->
+    <div style="background:var(--teal-soft); margin-bottom:4px; padding:6px 10px; border-radius:var(--r-sm); display:grid; grid-template-columns:120px 1fr; gap:12px;">
+      <div style="font-size:11px; font-weight:700; color:var(--teal); letter-spacing:0.06em;">Q2 OBJECTIVE</div>
+      <div style="font-size:12px;"><strong>TNF paper — draft complete</strong> · KR1 methods ✓ · KR2 figs 4/6 · KR3 co-authors ✗</div>
+    </div>
+
+    <!-- Writing lane -->
+    <div class="gantt-row" data-project="tnf">
+      <div class="gantt-lane-label">Writing</div>
+      <div class="gantt-track">
+        <div class="gbar done"  style="left: 0%;  width: 10%;" title="Intro drafted (done)">Intro ✓</div>
+        <div class="gbar"        style="left: 11%; width: 11%;" title="Methods drafted (active)">Methods</div>
+        <div class="gbar"        style="left: 23%; width: 11%;" title="Results drafted">Results</div>
+        <div class="gbar crit"   style="left: 35%; width: 11%;" title="Figures v3 (critical path)">Figures v3</div>
+        <div class="gbar"        style="left: 47%; width: 11%;" title="Paper polish">Polish</div>
+      </div>
+    </div>
+
+    <!-- Lab lane -->
+    <div class="gantt-row" data-project="tnf">
+      <div class="gantt-lane-label">Lab (TNF)</div>
+      <div class="gantt-track">
+        <div class="gbar lab"   style="left: 14%; width: 18%;" title="Dose-response">Dose-response</div>
+        <div class="gbar lab"   style="left: 33%; width: 11%;" title="Replicate">Replicate</div>
+      </div>
+    </div>
+
+    <!-- Organoid lab -->
+    <div class="gantt-row" data-project="organoid">
+      <div class="gantt-lane-label">Lab (Organoid)</div>
+      <div class="gantt-track">
+        <div class="gbar lab"   style="left: 10%; width: 14%;" title="Media v2 protocol">Media v2</div>
+        <div class="gbar lab"   style="left: 25%; width: 16%;" title="Cell type B stable">Cell type B</div>
+        <div class="gbar lab"   style="left: 42%; width: 14%;" title="Doubling time char.">Doubling char.</div>
+      </div>
+    </div>
+
+    <!-- R01 -->
+    <div class="gantt-row" data-project="r01">
+      <div class="gantt-lane-label">R01 renewal</div>
+      <div class="gantt-track">
+        <div class="gbar done" style="left: 2%; width: 8%;" title="Aim 1 outline (done)">Aim 1 ✓</div>
+        <div class="gbar"      style="left: 11%; width: 11%;" title="Aim 3 outline">Aim 3 outline</div>
+        <div class="gbar"      style="left: 23%; width: 18%;" title="Prelim data">Prelim data</div>
+        <div class="gbar crit" style="left: 42%; width: 14%;" title="Submit deadline Aug 1">Submit</div>
+      </div>
+    </div>
+
+    <!-- Collab lane with milestones -->
+    <div class="gantt-row" data-project="tnf">
+      <div class="gantt-lane-label">Collab</div>
+      <div class="gantt-track">
+        <div class="gmilestone" style="left: 45%;" title="Co-author review Jun 15"></div>
+        <div style="position:absolute; left: 47%; top: 15px; font-size: 10.5px; color: var(--ink);">Co-authors (Jun 15)</div>
+        <div class="gmilestone" style="left: 73%;" title="Submitted Sep 30"></div>
+        <div style="position:absolute; left: 75%; top: 15px; font-size: 10.5px; color: var(--ink);">Submitted (Sep 30)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2 mt-16" style="grid-template-columns: 2fr 1fr;">
+    <div class="card">
+      <h2>Critical path</h2>
+      <p style="font-size:13px; margin-bottom:10px;">
+        From today, the tightest sequence is:
+      </p>
+      <div class="flex" style="gap:4px; flex-wrap:wrap; font-size:12px;">
+        <span class="chip">Methods → May 1</span>
+        <span>→</span>
+        <span class="chip">Results → May 15</span>
+        <span>→</span>
+        <span class="chip amber">Figures v3 → May 31</span>
+        <span>→</span>
+        <span class="chip">Co-authors → Jun 15</span>
+        <span>→</span>
+        <span class="chip">Submit → Sep 30</span>
+      </div>
+      <p style="font-size:12px; color:var(--muted); margin-top:10px;">
+        <strong>2 days of slack</strong> between Figures v3 and the co-author review milestone. Any slip on Figures pushes the whole sequence.
+      </p>
+    </div>
+    <div class="card">
+      <h2>Move a bar in chat</h2>
+      <pre class="mono" style="background:#f1f5f9; padding:10px; border-radius:4px; font-size:11px; white-space:pre-wrap;">> slip TNF methods by a week
+
+Claude: That cascades Results and
+Figures v3. Checkpoint "Co-author
+review Jun 15" still fits, but 0
+days of slack remain. Accept?</pre>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Zoom levels match the Plan Board on the week axis — click through to see how a single Gantt bar maps to a Deep block on the <a href="plan.html">Plan Board</a>.
+</footer>
+
+<script>
+  function selectProj(p) {
+    document.querySelectorAll('.proj-tabs button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    document.querySelectorAll('.gantt-row').forEach(r => {
+      if (p === 'all' || r.dataset.project === p) r.style.display = '';
+      else r.style.display = 'none';
+    });
+  }
+  // Click a bar for demo: open a small action sheet
+  document.querySelectorAll('.gbar, .gmilestone').forEach(b => {
+    b.addEventListener('click', (e) => {
+      const label = b.title || b.textContent;
+      if (confirm(`Demo: ${label}\n\nIn a live repo, this opens an inline editor to rename the checkpoint, shift the dates, or mark it done. Submit a Gantt-edit issue now?`)) {
+        alert('Would open a pre-filled GitHub Issue (template: edit-checkpoint.yml).');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .report {
+    max-width: 720px; margin: 0 auto;
+    background: #fff; border: 1px solid var(--line);
+    border-radius: var(--r); padding: 32px 40px;
+    box-shadow: var(--shadow);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  @media print {
+    .nav, footer, .controls, .tabs, .banner { display: none !important; }
+    .report { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+    body { background: #fff; }
+  }
+  .report h1 {
+    font-family: var(--font); font-size: 20px; color: var(--navy);
+    margin-bottom: 4px; letter-spacing: -0.01em;
+  }
+  .report .report-sub { font-family: var(--font); color: var(--muted); font-size: 12px; margin-bottom: 20px; }
+  .report h2 {
+    font-family: var(--font); font-size: 13px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--teal); margin-top: 24px; margin-bottom: 10px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--line);
+  }
+  .report ul { margin-left: 18px; margin-bottom: 10px; }
+  .report li { margin-bottom: 6px; line-height: 1.5; font-size: 14px; }
+  .report p { margin-bottom: 10px; line-height: 1.5; font-size: 14px; }
+  .report .chart {
+    background: #f8fafc; padding: 14px; border-radius: 4px;
+    margin: 12px 0; font-family: var(--font);
+  }
+  .controls {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 16px; align-items: center;
+  }
+  .controls select, .controls button {
+    padding: 6px 10px; border: 1px solid var(--line);
+    border-radius: 4px; background: #fff; font-family: inherit; font-size: 12px;
+    cursor: pointer;
+  }
+  .controls button.primary {
+    background: var(--teal); color: #fff; border-color: var(--teal);
+    font-weight: 600;
+  }
+  .tabs {
+    display: flex; gap: 4px; margin-bottom: 14px;
+  }
+  .tabs button {
+    padding: 6px 12px; background: #f1f5f9; border: none;
+    border-radius: 4px 4px 0 0; font-family: inherit; font-size: 12px;
+    cursor: pointer; color: var(--muted); font-weight: 600;
+  }
+  .tabs button.active { background: #fff; color: var(--navy); border: 1px solid var(--line); border-bottom: 2px solid #fff; margin-bottom: -1px; z-index: 2; position: relative; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html" class="active">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Collaborator reports</h1>
+    <div class="subtitle">Generated from real progress logs. Three output formats — print to PDF, send as email, drop into slides.</div>
+  </div>
+
+  <div class="controls">
+    <label class="small muted">Project:</label>
+    <select id="projSel">
+      <option value="tnf-paper">TNF paper</option>
+      <option value="organoid">Organoid model</option>
+      <option value="r01">R01 renewal</option>
+    </select>
+    <label class="small muted">For:</label>
+    <select id="audSel">
+      <option value="prof-smith">Prof Smith (PI)</option>
+      <option value="sara">Sara (postdoc)</option>
+      <option value="ravi">Ravi (postdoc)</option>
+    </select>
+    <label class="small muted">Period:</label>
+    <select id="periodSel">
+      <option value="week">This week</option>
+      <option value="month">This month</option>
+      <option value="quarter">This quarter</option>
+    </select>
+    <button class="primary" onclick="regen()">Regenerate</button>
+    <button onclick="window.print()">Print to PDF</button>
+    <button onclick="copyMd()">Copy .md</button>
+    <button onclick="copyEmail()">Copy as email</button>
+  </div>
+
+  <div class="tabs">
+    <button class="active" onclick="switchTab(event, 'preview')">Preview</button>
+    <button onclick="switchTab(event, 'md')">Markdown</button>
+    <button onclick="switchTab(event, 'email')">Email</button>
+  </div>
+
+  <div id="preview-pane">
+    <div class="report" id="reportBody"></div>
+  </div>
+
+  <div id="md-pane" style="display:none;">
+    <pre id="mdOut" class="frontmatter" style="white-space:pre-wrap; max-width:720px; margin:0 auto; padding:20px; font-size:12px; line-height:1.5;"></pre>
+  </div>
+
+  <div id="email-pane" style="display:none;">
+    <div class="card" style="max-width:720px; margin:0 auto;">
+      <div style="padding-bottom:12px; border-bottom:1px solid var(--line); margin-bottom:12px;">
+        <div class="small muted">To: <span id="emailTo"></span></div>
+        <div class="small muted">Subject: <span id="emailSubj"></span></div>
+      </div>
+      <pre id="emailBody" style="white-space:pre-wrap; font-family:inherit; font-size:13px; line-height:1.5;"></pre>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Saved to <code>exports/2026-W17-tnf-for-prof-smith.md</code> when generated via <code>/report tnf for prof-smith</code>.
+</footer>
+
+<script src="app.js"></script>
+<script>
+  const PROJECT_META = {
+    'tnf-paper':  { title: 'TNF paper',        status: 'on track', objective: 'Q2: draft complete' },
+    'organoid':   { title: 'Organoid model',   status: 'watch',    objective: 'Q2: baseline working' },
+    'r01':        { title: 'R01 renewal',      status: 'on track', objective: 'Q2: Aim 3 outline' },
+  };
+  const AUD_META = {
+    'prof-smith': { name: 'Prof Smith', email: 'smith@lab.university.edu',  salutation: 'Dear Prof Smith,' },
+    'sara':       { name: 'Sara',       email: 'sara@lab.university.edu',   salutation: 'Hi Sara,' },
+    'ravi':       { name: 'Ravi',       email: 'ravi@lab.university.edu',   salutation: 'Hi Ravi,' },
+  };
+
+  function buildReport() {
+    const proj = document.getElementById('projSel').value;
+    const aud  = document.getElementById('audSel').value;
+    const period = document.getElementById('periodSel').value;
+
+    const projMeta = PROJECT_META[proj];
+    const audMeta  = AUD_META[aud];
+
+    const progress = state.progressLog.filter(l => l.project === proj);
+    const nextItems = [
+      'Results section drafting (target: Fri)',
+      'Figures 4–6 first pass',
+      'Incorporate co-author feedback once in',
+    ];
+    const asks = [
+      'Comments on Methods section before I start Results?',
+      'Cell Reports 6-panel figure limit — stick to it, or push for 7?',
+    ];
+
+    // HTML preview
+    const html = `
+      <h1>${projMeta.title} — weekly report</h1>
+      <div class="report-sub">for <strong>${audMeta.name}</strong>  ·  week of Apr 14–20, 2026  ·  ${projMeta.status}</div>
+
+      <h2>Progress this week</h2>
+      <ul>
+        ${progress.map(l => `<li><strong>${l.text}</strong>${l.duration ? ` <span class="muted">(${l.duration})</span>` : ''}</li>`).join('')}
+        ${progress.length === 0 ? '<li class="muted">No logged progress.</li>' : ''}
+      </ul>
+
+      <h2>Quarterly objective</h2>
+      <p>${projMeta.objective} — see Gantt for checkpoint status.</p>
+
+      <div class="chart">
+        <div class="small" style="margin-bottom:6px; color:var(--muted);">OKR burn-up</div>
+        <div class="progress green" style="height:14px;"><span style="width:67%; background:var(--green);"></span></div>
+        <div class="small mt-8"><strong>67%</strong> — 2 of 3 KRs done or in flight.</div>
+      </div>
+
+      <h2>Next week</h2>
+      <ul>${nextItems.map(n => `<li>${n}</li>`).join('')}</ul>
+
+      <h2>Blockers</h2>
+      <ul>
+        ${state.project.blockers.map(b => `<li>${b.text}</li>`).join('') || '<li class="muted">None.</li>'}
+      </ul>
+
+      <h2>Your input needed</h2>
+      <ul>${asks.map(a => `<li>${a}</li>`).join('')}</ul>
+    `;
+    document.getElementById('reportBody').innerHTML = html;
+
+    // Markdown variant
+    const md = `# ${projMeta.title} — weekly report
+
+**For:** ${audMeta.name}
+**Week:** Apr 14–20, 2026
+**Status:** ${projMeta.status}
+
+## Progress this week
+${progress.map(l => `- **${l.text}**${l.duration ? ` _(${l.duration})_` : ''}`).join('\n')}
+
+## Quarterly objective
+${projMeta.objective}
+
+- KR1 methods ✓
+- KR2 figures 4/6
+- KR3 co-authors ✗
+
+## Next week
+${nextItems.map(n => `- ${n}`).join('\n')}
+
+## Blockers
+${state.project.blockers.map(b => `- ${b.text}`).join('\n') || '- None.'}
+
+## Your input needed
+${asks.map(a => `- ${a}`).join('\n')}
+
+---
+Generated by research-pm from progress/2026-04.md at ${new Date().toISOString().slice(0,16).replace('T',' ')}.`;
+    document.getElementById('mdOut').textContent = md;
+
+    // Email variant
+    const subject = `${projMeta.title} — weekly update (Apr 14–20)`;
+    const body = `${audMeta.salutation}
+
+Quick update on ${projMeta.title} for the week of Apr 14–20.
+
+**This week:**
+${progress.map(l => `• ${l.text}${l.duration ? ` (${l.duration})` : ''}`).join('\n')}
+
+**Next week:**
+${nextItems.map(n => `• ${n}`).join('\n')}
+
+**Your input needed:**
+${asks.map(a => `• ${a}`).join('\n')}
+
+Happy to discuss in our next 1:1. Full Gantt and checkpoint status is on the dashboard.
+
+Thanks,
+[your name]`;
+    document.getElementById('emailTo').textContent   = audMeta.email;
+    document.getElementById('emailSubj').textContent = subject;
+    document.getElementById('emailBody').textContent = body;
+  }
+
+  function regen() { buildReport(); flashMsg('Report regenerated from current progress log.'); }
+  function copyMd()    { navigator.clipboard.writeText(document.getElementById('mdOut').textContent); flashMsg('Markdown copied to clipboard.'); }
+  function copyEmail() {
+    const t = `Subject: ${document.getElementById('emailSubj').textContent}\nTo: ${document.getElementById('emailTo').textContent}\n\n${document.getElementById('emailBody').textContent}`;
+    navigator.clipboard.writeText(t);
+    flashMsg('Email copied to clipboard.');
+  }
+  function switchTab(e, tab) {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    ['preview', 'md', 'email'].forEach(t =>
+      document.getElementById(t + '-pane').style.display = (t === tab) ? '' : 'none'
+    );
+  }
+  function flashMsg(msg) {
+    const b = document.createElement('div');
+    b.textContent = msg;
+    b.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:6px;font-size:13px;z-index:200;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 2500);
+  }
+
+  document.getElementById('projSel').addEventListener('change', buildReport);
+  document.getElementById('audSel').addEventListener('change', buildReport);
+  document.getElementById('periodSel').addEventListener('change', buildReport);
+
+  buildReport();
+</script>
+
+</body>
+</html>

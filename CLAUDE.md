@@ -123,20 +123,82 @@ When a new meeting clobbers an existing block, detect in next sync, propose re-s
 
 ---
 
-## Data model — quick reference
+## Data model — file schemas
 
-See [README.md](README.md) for the full table. Key files you will read/write constantly:
+Key files you read/write constantly. Each command defines which it touches.
 
-- `projects/<id>.md` — frontmatter + sections
-- `progress/YYYY-MM.md` — append-only daily log
-- `goals.md` — year + quarterly structure
-- `people.md` — team + delegation lists
-- `week-plans/YYYY-Www.md` — blocks[] for the current week
-- `meta/task-history.json` — duration learning state
-- `dashboard.md` — auto-regenerated; never hand-edited
+### `projects/<id>.md`
+```yaml
+---
+id: tnf-paper
+title: TNF paper
+status: active | paused | archived
+goal_model: okr | narrative
+deadline: YYYY-MM-DD
+priority: 1-5
+collaborators: [list-of-people-ids]
+team: [list-of-people-ids]
+workstreams: [lab, writing, analysis, collab, admin]
+tags: [paper, grant, ...]
+---
+## Goal
+## Checkpoints
+## Lab work
+## Paper / writing
+## Meetings
+## Blockers
+## Notes
+```
+
+### `progress/YYYY-MM.md` (append-only)
+One line per entry:
+```
+YYYY-MM-DD <project-id> — <note> (Nm | Nh)
+```
+Duration is optional but strongly preferred. Feeds `meta/task-history.json`.
+
+### `goals.md`
+Year goals (3–5 with measurable DoD) followed by per-quarter breakdown.
+OKR projects get numeric KRs with checkbox state; narrative projects get a
+paragraph + traffic-light status.
+
+### `people.md`
+One entry per person. Fields: role, projects, cadence, last_contact,
+**Owes me** list, **I owe** list, notes.
+
+### `week-plans/YYYY-Www.md`
+```yaml
+---
+week: 2026-W17
+top_5:
+  - task_id
+blocks:
+  - { day: mon, start: "09:00", end: "11:00", type: deep, task: t-methods-v1 }
+---
+```
+
+### `meta/task-history.json`
+```json
+{
+  "figure_draft":   {"median_min": 140, "p90_min": 210, "n": 8},
+  "methods_section":{"median_min": 270, "p90_min": 360, "n": 4}
+}
+```
+Updated by `/logwin` when a duration is provided.
+
+### `meta/onboarding.json`
+```json
+{ "completed_stages": [1, 2], "next_stage": 3, "last_run": "2026-04-21" }
+```
+Read by `/onboard` to pick up where you left off.
 
 ---
 
-## Before implementing anything else
+## When in doubt
 
-The full methodology document (`PROJECT-PLANNING.md`) and tech architecture (`TOOL-PLANNING.md`) are not yet written. The presentation deck (`PRESENTATION.pptx`) is the first artefact — share with her, gather feedback, revise plans, then build.
+- **Prefer action over clarification.** Ask only when the decision is genuinely hers.
+- **Prefer specificity over generic praise.** Name what shipped.
+- **Prefer one question at a time.** Never fire a wall of options.
+- **Write every change back to the repo.** Markdown is the truth — if you didn't commit it, it didn't happen.
+
+Command output specs live in `.claude/commands/*.md`. Refer there for exact format of each ritual.

@@ -16,3 +16,7 @@ __pycache__/
 
 # Office lock files (created when .pptx is open)
 ~$*
+
+# Claude Code local session state
+.claude/last-standup
+.claude/onboarding-state

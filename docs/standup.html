@@ -3,8 +3,191 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Standup — research-pm</title>
+<title>Standup & check-in — research-pm</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  .conv {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .bubble {
+    max-width: 80%;
+    padding: 14px 18px;
+    border-radius: 18px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .bubble.claude {
+    background: #fff;
+    align-self: flex-start;
+    border-top-left-radius: 4px;
+    border: 1px solid var(--line);
+  }
+  .bubble.user {
+    background: var(--navy);
+    color: #fff;
+    align-self: flex-end;
+    border-top-right-radius: 4px;
+  }
+  .bubble.claude::before {
+    content: "Claude";
+    position: absolute;
+    top: -18px; left: 12px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--teal);
+    text-transform: uppercase;
+  }
+  .bubble.user::before {
+    content: "You";
+    position: absolute;
+    top: -18px; right: 12px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .bubble p { margin-bottom: 10px; }
+  .bubble p:last-child { margin-bottom: 0; }
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: var(--teal); text-transform: uppercase;
+    margin: 10px 0 6px 0;
+  }
+  .section-label.red { color: var(--red); }
+  .section-label.amber { color: #b45309; }
+
+  .today-item {
+    display: grid;
+    grid-template-columns: 14px 90px 1fr;
+    gap: 8px; padding: 4px 0; font-size: 13px;
+    align-items: baseline;
+  }
+  .today-item .stripe { width: 4px; height: 16px; border-radius: 2px; }
+  .today-item .stripe.deep { background: var(--deep); }
+  .today-item .stripe.lab { background: var(--lab); }
+  .today-item .stripe.meeting { background: var(--meeting); }
+  .today-item .time { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .today-item .task { font-weight: 600; color: var(--navy); }
+  .today-item .chain { grid-column: 2 / -1; font-size: 11px; color: var(--teal); }
+
+  .quick-reply {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .quick-reply button {
+    padding: 6px 12px;
+    background: var(--teal-soft);
+    color: var(--teal);
+    border: 1px solid var(--teal);
+    border-radius: 16px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .quick-reply button:hover { background: var(--teal); color: #fff; }
+
+  .input-area {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 2px solid var(--teal);
+    border-radius: var(--r);
+    align-self: flex-end;
+    width: 100%;
+    max-width: 80%;
+    box-shadow: var(--shadow);
+  }
+  .input-area textarea {
+    resize: none;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    min-height: 36px;
+    outline: none;
+    color: var(--ink);
+  }
+  .input-area button {
+    padding: 8px 14px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: var(--r-sm);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    align-self: end;
+  }
+  .input-area button:disabled { background: var(--muted); cursor: not-allowed; }
+
+  .rhythm-header {
+    display: flex; gap: 4px;
+    margin-bottom: 20px;
+    background: #fff;
+    padding: 4px;
+    border-radius: var(--r);
+    border: 1px solid var(--line);
+    width: fit-content;
+  }
+  .rhythm-header button {
+    padding: 6px 14px;
+    background: transparent;
+    border: none;
+    border-radius: var(--r-sm);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .rhythm-header button.active {
+    background: var(--teal);
+    color: #fff;
+  }
+
+  .win-chip-form {
+    display: grid;
+    grid-template-columns: 1fr 90px auto;
+    gap: 8px;
+  }
+  .win-chip-form input {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-family: inherit; font-size: 13px;
+  }
+  .win-chip-form button {
+    padding: 8px 14px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: 4px;
+    font-weight: 600; font-size: 12px;
+    cursor: pointer;
+  }
+
+  .typing {
+    display: inline-flex; gap: 3px; padding: 8px 10px;
+  }
+  .typing span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--muted); opacity: 0.4;
+    animation: blink 1.4s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    .bubble, .input-area { max-width: 95%; }
+  }
+</style>
 </head>
 <body>
 
@@ -18,132 +201,362 @@
   <a href="report.html">Report</a>
   <a href="standup.html" class="active">Standup</a>
   <a href="architecture.html">How it works</a>
+  <a href="setup.html">Setup</a>
   <span class="spacer"></span>
   <span class="demo-tag">DEMO</span>
 </nav>
 
 <main>
   <div class="page-head">
-    <h1>Morning standup</h1>
-    <div class="subtitle">This is what Claude posts in your chat each morning. It runs automatically via the SessionStart hook.</div>
+    <h1>Standup & check-in</h1>
+    <div class="subtitle">A short conversation with Claude. Morning: what's ahead. Evening: what happened. Claude acts as your PM — asks, adjusts, logs.</div>
   </div>
 
-  <div class="grid-2" style="grid-template-columns: 1fr 1fr;">
-    <div class="chat">
-      <div class="chat-head">
-        <span class="dot deep"></span>
-        <span class="who">Claude</span>
-        <span style="color:var(--muted)">· morning standup</span>
-        <span class="time">9:02 am</span>
-      </div>
+  <div class="rhythm-header">
+    <button class="active" onclick="selectRhythm('morning')">Morning standup</button>
+    <button onclick="selectRhythm('evening')">Evening check-in</button>
+    <button onclick="selectRhythm('weekly')">Monday week-plan</button>
+    <button onclick="selectRhythm('friday')">Friday digest + retro</button>
+  </div>
 
-      <p>Good morning. Here's your standup for <strong>Tuesday, Apr 21</strong>.</p>
-
-      <div class="section-label">Today's 3</div>
-
-      <div class="today-item">
-        <div class="stripe deep"></div>
-        <div class="time">09:00–11:00</div>
-        <div class="task">Methods revise</div>
-        <div class="chain"><span>TNF paper</span><span class="sep">›</span>Methods drafted<span class="sep">›</span>Q2 draft<span class="sep">›</span>2026 paper</div>
-      </div>
-
-      <div class="today-item">
-        <div class="stripe lab"></div>
-        <div class="time">14:00–16:00</div>
-        <div class="task">Media protocol v2</div>
-        <div class="chain"><span>Organoid</span><span class="sep">›</span>Media v2<span class="sep">›</span>Q2 baseline<span class="sep">›</span>2026 model</div>
-      </div>
-
-      <div class="today-item">
-        <div class="stripe meeting"></div>
-        <div class="time">16:15–17:00</div>
-        <div class="task">1:1 with Sara</div>
-        <div class="chain"><span>People</span><span class="sep">›</span>Sara owes 2<span class="sep">›</span>bi-weekly cadence</div>
-      </div>
-
-      <div class="section-label red">Overdue · 1</div>
-      <p style="font-size: 13px;">
-        <strong>Figure 4 v1 (TNF)</strong> — due Monday. Re-slot to Thursday 10:00 Deep block, or push the checkpoint?
-      </p>
-
-      <div class="section-label">Calendar shape</div>
-      <p style="font-size: 13px;">
-        3h Deep morning  ·  2h Lab afternoon  ·  1 meeting (Sara 16:15). No external commitments.
-      </p>
-
-      <div class="section-label amber">Heads up</div>
-      <p style="font-size: 13px;">
-        Writing block skipped twice this week. <strong>Organoid log has been silent 4 days.</strong> If you take today's 09:00–10:30 writing slot, the 5-day flag clears tomorrow.
-      </p>
-
-      <div class="section-label">Streak</div>
-      <p style="font-size: 13px;">
-        12-day writing streak. Longest this quarter.
-      </p>
-
-      <div style="border-top:1px solid var(--line); margin-top:14px; padding-top:10px; font-size:12px; color:var(--muted);">
-        Reply with edits, or just <code>/logwin</code> when something ships.
-      </div>
+  <div class="grid-2" style="grid-template-columns: 2fr 1fr;">
+    <div>
+      <div class="conv" id="conv"></div>
     </div>
 
     <div>
       <div class="card">
-        <h2>What Claude read before writing this</h2>
+        <h2 id="rhythm-title">Morning standup</h2>
+        <p class="small" id="rhythm-desc">Every day Claude opens with: today's 3 items, overdue flags, calendar shape, and any anti-burnout signals. Auto-fires via the SessionStart hook. You can skip, edit, or add — the conversation adapts.</p>
+      </div>
+
+      <div class="card">
+        <h2>Why a conversation, not a form</h2>
+        <p class="small">A form asks you to remember what matters. A conversation asks about what Claude already knows — "Figure 4 slipped yesterday. Still blocked, or unblocked now?" You only type the short answer.</p>
+      </div>
+
+      <div class="card">
+        <h2>What Claude logs from this chat</h2>
         <ul style="list-style:none; padding-left:0; font-size:12px;">
-          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
-            <code>week-plans/2026-W17.md</code> — to pull today's 3 from the Monday week plan
-          </li>
-          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
-            <code>projects/*.md</code> — status, next checkpoint, DoD per active project
-          </li>
-          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
-            <code>progress/2026-04.md</code> — last 7 days for streak, silent-day check
-          </li>
-          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
-            <code>calendar/2026-04.md</code> — synced events, free/busy for today
-          </li>
-          <li style="padding:6px 0; border-bottom:1px dashed var(--line);">
-            <code>goals.md</code> — for the goal chain on each item
-          </li>
-          <li style="padding:6px 0;">
-            <code>people.md</code> — owes-me / I-owe / last-contact for the 1:1
-          </li>
+          <li style="padding:4px 0; border-bottom:1px dashed var(--line);">Overnight changes → <code>projects/*.md</code></li>
+          <li style="padding:4px 0; border-bottom:1px dashed var(--line);">Confirmed plan → <code>week-plans/2026-W17.md</code></li>
+          <li style="padding:4px 0; border-bottom:1px dashed var(--line);">Wins you report → <code>progress/2026-04.md</code></li>
+          <li style="padding:4px 0; border-bottom:1px dashed var(--line);">Time data → <code>meta/task-history.json</code></li>
+          <li style="padding:4px 0;">New blockers → <code>projects/*.md</code> + Slack alert</li>
         </ul>
-      </div>
-
-      <div class="card">
-        <h2>What fires it</h2>
-        <p style="font-size:13px;">
-          <strong>SessionStart hook</strong> in <code>.claude/settings.json</code>. When you open Claude Code in this repo, it checks whether <code>/standup</code> has run today. If not, it runs.
-        </p>
-        <pre class="frontmatter mt-8" style="white-space:pre-wrap; font-size:11px;">{
-  "hooks": {
-    "SessionStart": [{
-      "matcher": "*",
-      "command": ".claude/scripts/maybe-standup.sh"
-    }]
-  }
-}</pre>
-      </div>
-
-      <div class="card">
-        <h2>Manual invocation</h2>
-        <p style="font-size:13px;">
-          Run it any time in Claude chat:
-        </p>
-        <pre class="mono" style="background:#f1f5f9; padding:10px; border-radius:4px; font-size:12px; margin-top:6px;">/standup</pre>
-        <p class="small muted" style="margin-top:8px;">
-          Backed by <code>.claude/commands/standup.md</code> — sets the exact structure Claude should produce.
-        </p>
       </div>
     </div>
   </div>
 </main>
 
 <footer>
-  Everything above comes from markdown in this repo. No database, no API key.
+  This is what Claude would do in a real Claude Code session. In the live demo, the messages are scripted to show the flow. In your actual repo, Claude produces the structure from <code>.claude/commands/standup.md</code>.
 </footer>
+
+<script>
+  const SCRIPTS = {
+    morning: [
+      { who: 'claude', delay: 200, body: `<p>Good morning. Here's your standup for <strong>Tuesday, Apr 21</strong>.</p>
+        <div class="section-label">Today's 3</div>
+        <div class="today-item">
+          <div class="stripe deep"></div><div class="time">09:00–11:00</div><div class="task">Methods revise</div>
+          <div class="chain">TNF paper › Methods drafted › Q2 draft</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe lab"></div><div class="time">14:00–16:00</div><div class="task">Media protocol v2</div>
+          <div class="chain">Organoid › Media v2 › Q2 baseline</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe meeting"></div><div class="time">16:15–17:00</div><div class="task">1:1 with Sara</div>
+          <div class="chain">People › Sara owes 2 items</div>
+        </div>
+        <div class="section-label red">Overdue · 1</div>
+        <p><strong>Figure 4 v1 (TNF)</strong> — due Monday. Move to Thursday 10am, or push the checkpoint?</p>
+        <div class="section-label">Calendar shape</div>
+        <p>3h Deep morning · 2h Lab afternoon · 1 meeting. Protected writing block is on your calendar.</p>
+        <div class="section-label amber">Heads up</div>
+        <p>Organoid writing log silent 4 days. If you take today's writing block, the 5-day flag clears.</p>
+        <p style="margin-top:12px; color:var(--teal); font-weight:600;">Anything change overnight, or ready to start?</p>`,
+        quick: ['Ready, start the day', 'Move Figure 4 to Thu', 'Add a blocker', 'Reschedule — not enough sleep'],
+      },
+    ],
+    evening: [
+      { who: 'claude', delay: 200, body: `<p>Hope today went well. Quick check-in for <strong>Tuesday, Apr 21</strong>.</p>
+        <div class="section-label">Planned today</div>
+        <div class="today-item">
+          <div class="stripe deep"></div><div class="time">09:00</div><div class="task">Methods revise</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe lab"></div><div class="time">14:00</div><div class="task">Media protocol v2</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe meeting"></div><div class="time">16:15</div><div class="task">1:1 with Sara</div>
+        </div>
+        <p style="margin-top:12px; color:var(--teal); font-weight:600;">What shipped today? Log wins below. I'll update progress/2026-04.md.</p>`,
+        quick: ['All three done', 'Methods done + notes', 'Skipped lab — tomorrow', 'Nothing shipped'],
+      },
+    ],
+    weekly: [
+      { who: 'claude', delay: 200, body: `<p>Morning. It's <strong>Monday, Apr 20</strong> — week 17.</p>
+        <p>Pulling your upcoming checkpoints from <code>projects/*.md</code> and what the team owes…</p>
+        <div class="section-label">Proposed top-5 this week</div>
+        <div class="today-item">
+          <div class="stripe deep"></div><div class="time">~ 8h</div><div class="task">Finish TNF methods</div>
+          <div class="chain">TNF › Methods drafted (DoD: 2000 words)</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe deep"></div><div class="time">~ 5h</div><div class="task">TNF Figure 4 v1</div>
+          <div class="chain">TNF › Figures v3</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe lab"></div><div class="time">~ 4h</div><div class="task">Organoid media v2 finalise</div>
+          <div class="chain">Organoid › Media v2 protocol</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe meeting"></div><div class="time">~ 1h</div><div class="task">1:1 Sara (Thu)</div>
+          <div class="chain">People › Sara owes 2</div>
+        </div>
+        <div class="today-item">
+          <div class="stripe deep"></div><div class="time">~ 2h</div><div class="task">R01 Aim 3 outline</div>
+          <div class="chain">R01 › Aim 3 outline</div>
+        </div>
+        <p style="margin-top:12px;">Max 1–2 per project. One-hour slack built in. Want to swap or add anything before I write <code>week-plans/2026-W17.md</code>?</p>`,
+        quick: ['Looks good — commit', 'Drop R01 Aim 3 this week', 'Add: Grant admin paperwork', 'Push Figure 4 to next week'],
+      },
+    ],
+    friday: [
+      { who: 'claude', delay: 200, body: `<p>It's <strong>Friday, Apr 24</strong>. Week 17 wrap-up.</p>
+        <div class="section-label">Shipped this week</div>
+        <ul style="margin-left:16px; margin-bottom:8px;">
+          <li><strong>TNF methods section</strong> (2000 words, ready for co-author review)</li>
+          <li><strong>Figures 1–3 finalised</strong> at v3</li>
+          <li><strong>Replicate run</strong> matches primary data within 5%</li>
+          <li><strong>Organoid media v2</strong> working across 6 passages</li>
+          <li><strong>R01 Aim 3 outline</strong> drafted</li>
+        </ul>
+        <p><strong>12-day writing streak</strong>. Longest this quarter.</p>
+        <div class="section-label amber">What slipped</div>
+        <ul style="margin-left:16px; margin-bottom:8px;">
+          <li>Figure 4 v1 → pushed to next week (antibody delay)</li>
+          <li>Cell type B contamination still unresolved</li>
+        </ul>
+        <p style="margin-top:12px; color:var(--teal); font-weight:600;">For the retro: one thing to adjust next week?</p>`,
+        quick: ['Schedule lab hours earlier', 'Need a break — light week', 'Already adjusted', 'Ask Sara to own Figure 4'],
+      },
+    ],
+  };
+
+  const FOLLOWUP = {
+    'Ready, start the day': [
+      { who: 'claude', body: `<p>Good. Locked in.</p>
+        <p>I'll open the protected writing block on your calendar at <strong>09:00</strong>, and ping you at 10:55 to wrap. See you in 2 hours.</p>
+        <p class="small muted">Tip: if you want to change anything mid-block, just type <code>/move</code>.</p>` },
+    ],
+    'Move Figure 4 to Thu': [
+      { who: 'claude', body: `<p>Running the adjuster…</p>
+        <p><strong>Move Figure 4 v1 → Thursday 10:00 Deep block (2.5h).</strong></p>
+        <p>Cascades:<br>
+         · Thursday Methods polish → shifted to Friday<br>
+         · Q2 Objective still 🟢 — slack remaining: 1 day<br>
+         · Writing streak preserved</p>
+        <p>Commit the move?</p>`,
+        quick: ['Yes, commit', 'Show me the new Plan Board first', 'Cut scope instead'],
+      },
+    ],
+    'Add a blocker': [
+      { who: 'claude', body: `<p>What's blocked? Which project, what's needed, who can unblock it?</p>` },
+    ],
+    'All three done': [
+      { who: 'claude', body: `<p>Three for three — strong day.</p>
+        <p>Logging to <code>progress/2026-04.md</code>:</p>
+        <ul style="margin-left:16px;">
+          <li>Methods revise — TNF (est 2h; actual?)</li>
+          <li>Media protocol v2 — Organoid (est 2h; actual?)</li>
+          <li>1:1 Sara (30m; any action items?)</li>
+        </ul>
+        <p class="small muted">Quick durations help the estimator. Skip with "nothing notable" if you'd rather not.</p>` },
+    ],
+    'Methods done + notes': [
+      { who: 'claude', body: `<p>Methods logged. What notes — anything that changes tomorrow's plan?</p>` },
+    ],
+    'Skipped lab — tomorrow': [
+      { who: 'claude', body: `<p>Understood. Logging media protocol as deferred.</p>
+        <p>Moving it to <strong>Wed 14:00</strong> Lab block — which currently has Dose-response. Cascade:</p>
+        <p>· Dose-response → Thu 14:00 (bumps assay prep to Fri)<br>· Q2 Objective stays 🟡 · buffer: 1 day</p>
+        <p>Good to commit, or want to cut something else?</p>`, quick: ['Commit', 'Cut dose-response this week', 'Show me the Plan Board'] },
+    ],
+    'Nothing shipped': [
+      { who: 'claude', body: `<p>Some days are like that.</p>
+        <p>Skipping the progress log — no win logged. I'll check if anything needs reshuffling for tomorrow, but if you want to just close out, say "done for today" and I'll stop.</p>` },
+    ],
+    'Looks good — commit': [
+      { who: 'claude', body: `<p>Committed to <code>week-plans/2026-W17.md</code>. Calendar blocks created on your work calendar:</p>
+        <ul style="margin-left:16px; font-size:12px;">
+          <li>Mon-Fri 09:00–11:00 "Writing — TNF methods / figures"</li>
+          <li>Wed/Fri 14:00–16:00 "Lab — dose-response / organoid"</li>
+          <li>Thu 16:15 "1:1 Sara" (already on your calendar)</li>
+        </ul>
+        <p>See you tomorrow morning.</p>` },
+    ],
+    'Drop R01 Aim 3 this week': [
+      { who: 'claude', body: `<p>OK. Dropping R01 Aim 3 outline from this week.</p>
+        <p>Note: R01 submit deadline is <strong>Aug 1</strong>. With this slip, 14 weeks remain — still comfortable. I'll re-propose it next week.</p>
+        <p>Anything to add in its place, or leave the week at 4 items?</p>` },
+    ],
+    'Add: Grant admin paperwork': [
+      { who: 'claude', body: `<p>Added "Grant admin paperwork" as item 5. Which project does it roll up to, and what's the rough time estimate?</p>` },
+    ],
+    'Push Figure 4 to next week': [
+      { who: 'claude', body: `<p>Pushing Figure 4 v1 → week 18.</p>
+        <p>Checkpoint "Figures v3 by May 31" now has <strong>2 days of slack left</strong>. Any further slip will push the co-author review milestone. OK with that, or want to cut scope (drop a figure)?</p>` },
+    ],
+    'Schedule lab hours earlier': [
+      { who: 'claude', body: `<p>Noted in <code>retros/2026-W17.md</code>.</p>
+        <p>For next week, I'll propose lab blocks at <strong>10:00–12:00</strong> instead of 14:00–16:00. You'll see it in Monday's plan. Anything else?</p>` },
+    ],
+    'Need a break — light week': [
+      { who: 'claude', body: `<p>Got it.</p>
+        <p>For week 18, I'll cap at 3 items (down from 5) and skip Monday standup. Protected writing block stays but at 60 min instead of 90. You can dial back up any time — just say "normal week" Monday morning.</p>` },
+    ],
+    'Already adjusted': [
+      { who: 'claude', body: `<p>No changes to log. Have a good weekend.</p>
+        <p>I'll fire the standup again Monday 9am with the new week-plan draft.</p>` },
+    ],
+    'Ask Sara to own Figure 4': [
+      { who: 'claude', body: `<p>Moving Figure 4 v1 to Sara's "owes me" list.</p>
+        <p>Drafted a short message — want me to send?</p>
+        <blockquote style="margin:8px 0 8px 10px; padding:8px 12px; border-left:3px solid var(--teal); font-style:italic; font-size:12px;">
+        Hey Sara, could you take Figure 4 v1 for the TNF paper? Target: Apr 30. Blocker: antibody arriving Apr 28 — if it slips further, let me know early so I can re-plan. Thanks.
+        </blockquote>
+        <p>Send in Slack, or draft an email?</p>` },
+    ],
+  };
+
+  const container = document.getElementById('conv');
+  let currentRhythm = 'morning';
+
+  function selectRhythm(name) {
+    currentRhythm = name;
+    document.querySelectorAll('.rhythm-header button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    const titles = {
+      morning: ['Morning standup', 'Every day, auto-fired by the SessionStart hook. Covers today\'s 3, overdue items, calendar shape, heads-up flags.'],
+      evening: ['Evening check-in', 'A short log of what shipped. Types into progress/YYYY-MM.md. Durations feed the estimator. Skip if you ran out of steam.'],
+      weekly:  ['Monday week-plan', 'Claude proposes a top-5 for the week from upcoming checkpoints + team needs. You edit. Blocks get pre-scheduled on your calendar.'],
+      friday:  ['Friday digest + retro', 'Names what shipped (no fluff). One-sentence retro: what slipped and what to adjust.'],
+    };
+    document.getElementById('rhythm-title').textContent = titles[name][0];
+    document.getElementById('rhythm-desc').textContent = titles[name][1];
+    container.innerHTML = '';
+    runScript(SCRIPTS[name]);
+  }
+
+  function runScript(lines) {
+    lines.forEach((l, i) => {
+      setTimeout(() => {
+        addBubble(l.who, l.body);
+        if (l.quick) addQuickReplies(l.quick);
+        if (i === lines.length - 1) addUserInput();
+      }, l.delay || 200);
+    });
+  }
+
+  function addBubble(who, html) {
+    const b = document.createElement('div');
+    b.className = 'bubble ' + who;
+    b.innerHTML = html;
+    container.appendChild(b);
+    scrollDown();
+  }
+
+  function addQuickReplies(options) {
+    const wrap = document.createElement('div');
+    wrap.className = 'quick-reply';
+    wrap.style.alignSelf = 'flex-end';
+    options.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.textContent = opt;
+      btn.onclick = () => { wrap.remove(); handleReply(opt); };
+      wrap.appendChild(btn);
+    });
+    container.appendChild(wrap);
+    scrollDown();
+  }
+
+  function addUserInput() {
+    const existing = document.querySelector('.input-area');
+    if (existing) existing.remove();
+    const input = document.createElement('div');
+    input.className = 'input-area';
+    input.innerHTML = `
+      <textarea id="userInput" placeholder="Type a reply — e.g. 'ready to start', 'move figure 4 to Thu', 'add blocker: antibody delay'…"></textarea>
+      <button onclick="sendFree()">Send</button>
+    `;
+    container.appendChild(input);
+    scrollDown();
+  }
+
+  function sendFree() {
+    const val = document.getElementById('userInput').value.trim();
+    if (!val) return;
+    document.querySelector('.input-area').remove();
+    handleReply(val);
+  }
+
+  function handleReply(text) {
+    addBubble('user', `<p>${escapeHtml(text)}</p>`);
+    showTyping();
+    setTimeout(() => {
+      removeTyping();
+      const follow = FOLLOWUP[text] || [{ who: 'claude', body: genericReply(text) }];
+      follow.forEach((l, i) => {
+        setTimeout(() => {
+          addBubble(l.who, l.body);
+          if (l.quick) addQuickReplies(l.quick);
+          if (i === follow.length - 1) addUserInput();
+        }, 200 * (i + 1));
+      });
+    }, 900);
+  }
+
+  function genericReply(text) {
+    const l = text.toLowerCase();
+    if (l.includes('move') || l.includes('slip') || l.includes('push')) {
+      return `<p>Running the adjuster on that. You can see the cascade preview on the <a href="plan.html">Plan Board</a>.</p>
+              <p class="small muted">In a live session, I'd compute the actual downstream effect from your week-plan and propose accept / compress / cut-scope options.</p>`;
+    }
+    if (l.includes('block') || l.includes('stuck')) {
+      return `<p>Added to <code>projects/&lt;project&gt;.md</code> under Blockers. I'll check it every morning until resolved. If it repeats 3+ standups, I'll flag it for escalation.</p>`;
+    }
+    if (l.includes('done') || l.includes('shipped') || l.includes('win')) {
+      return `<p>Logged. Any duration to record (helps the estimator), or should I use the planned time?</p>`;
+    }
+    return `<p class="small muted">(demo) I'd parse that and act. In a live session, Claude handles arbitrary replies and asks follow-ups as needed.</p>`;
+  }
+
+  function showTyping() {
+    const t = document.createElement('div');
+    t.className = 'bubble claude';
+    t.id = 'typing-bubble';
+    t.innerHTML = `<div class="typing"><span></span><span></span><span></span></div>`;
+    container.appendChild(t);
+    scrollDown();
+  }
+  function removeTyping() {
+    const t = document.getElementById('typing-bubble');
+    if (t) t.remove();
+  }
+
+  function scrollDown() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+
+  runScript(SCRIPTS.morning);
+</script>
 
 </body>
 </html>

@@ -142,8 +142,10 @@ async function hydrateFromLive() {
     }
     // Transform live shape into the shape app.js expects.
     state = mergeLiveIntoState(live);
+    applyScopeFilter();  // before dispatching so pages see filtered state
     document.body.classList.add('live-data');
     updateDataSourceTag('LIVE', live.generated_at);
+    renderScopeIndicator();
     window.dispatchEvent(new CustomEvent('state:hydrated', { detail: { source: 'live' } }));
     return { source: 'live', state };
   } catch (e) {
@@ -197,6 +199,66 @@ function mergeLiveIntoState(live) {
 
 // Global state, usable from every page.
 let state = loadState();
+
+/**
+ * Per-user scope filter.
+ *
+ * If the URL has ?user=<name>, we filter the live state so the user
+ * only sees projects they own/collaborate on, their progress entries,
+ * and their relationships. It's a UI convenience — not a permission
+ * boundary (anyone with the URL can change the param).
+ *
+ * Set window.__scopeUser so pages can show the filter is active.
+ */
+function applyScopeFilter() {
+  const params = new URLSearchParams(location.search);
+  const scope = (params.get("user") || "").toLowerCase().trim();
+  window.__scopeUser = scope || null;
+  if (!scope) return;
+
+  const isMine = (person) =>
+    (person || "").toLowerCase() === scope ||
+    (person || "").toLowerCase().includes(scope);
+
+  const live = window.__liveData;
+  if (!live || !live.projects) return;
+
+  // Projects: keep those where the scoped user appears in team or collaborators
+  const myProjects = new Set(
+    live.projects
+      .filter((p) => {
+        const members = [...(p.team || []), ...(p.collaborators || [])].map((m) => m.toLowerCase());
+        return members.some(isMine);
+      })
+      .map((p) => p.id)
+  );
+
+  state = {
+    ...state,
+    progressLog: (state.progressLog || []).filter((e) => myProjects.has(e.project)),
+    people: (state.people || []).filter((p) => isMine(p.name)),
+    _scopedTo: scope,
+    _scopedProjects: [...myProjects],
+  };
+}
+
+function renderScopeIndicator() {
+  const scope = window.__scopeUser;
+  if (!scope) return;
+  const nav = document.querySelector(".nav");
+  if (!nav || nav.querySelector(".scope-pill")) return;
+  const pill = document.createElement("span");
+  pill.className = "scope-pill";
+  pill.style.cssText =
+    "background:#fef3c7;color:#92400e;border-radius:4px;padding:3px 8px;" +
+    "font-size:10px;font-weight:700;letter-spacing:0.05em;margin-left:6px;";
+  pill.textContent = `SCOPED · ${scope.toUpperCase()}`;
+  pill.title = `Filtered to ${scope}'s view. Remove ?user=… to see everything.`;
+  nav.insertBefore(pill, nav.querySelector(".demo-tag"));
+}
+
+// Show the scope pill even before hydration completes (on seed data).
+document.addEventListener("DOMContentLoaded", renderScopeIndicator);
 
 // Kick off hydration. Pages that care about the refresh can listen for
 // `state:hydrated` and call their render function again.

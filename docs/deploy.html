@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deploy — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .deploy-step {
+    display: grid; grid-template-columns: 40px 1fr;
+    gap: 14px; margin-bottom: 20px;
+  }
+  .deploy-step .num {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--teal); color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 14px;
+  }
+  .deploy-step h3 { font-size: 15px; color: var(--navy); margin-bottom: 6px; }
+  .deploy-step p { font-size: 13px; line-height: 1.5; margin-bottom: 6px; }
+  .deploy-step code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+  .deploy-step .note {
+    font-size: 12px; color: var(--muted); padding: 6px 10px;
+    background: #fef3c7; border-left: 3px solid var(--amber);
+    border-radius: 3px; margin-top: 4px;
+  }
+  .option-box {
+    border: 1px solid var(--line); border-radius: var(--r);
+    padding: 14px; margin-bottom: 12px; background: #fff;
+  }
+  .option-box h4 { color: var(--navy); margin-bottom: 6px; font-size: 13px; }
+  .option-box .price { color: var(--teal); font-weight: 700; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <a href="setup.html">Setup</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Deploy</h1>
+    <div class="subtitle">Getting this live for your lab. GitHub Pages is free and enough for most; Cloudflare Access adds a password gate; custom domain is optional.</div>
+  </div>
+
+  <div class="banner">
+    Total time: <strong>30–60 min</strong> for a lab-ready deploy. You can ship the free public version in 5 min and layer auth + domain on later.
+  </div>
+
+  <div class="card">
+    <h2>Choose a privacy level</h2>
+
+    <div class="option-box">
+      <h4>1. Public repo + public Pages <span class="price">free · 5 min</span></h4>
+      <p>Fastest. Good for demos and open-science labs. Anyone with the URL
+      sees your projects + progress. Collaborator names appear in <code>people.md</code>.</p>
+    </div>
+
+    <div class="option-box">
+      <h4>2. Public repo + Cloudflare Access gate <span class="price">free · 20 min</span></h4>
+      <p>Public URL, but Cloudflare Access challenges for email before showing
+      anything. You maintain an allowlist. Recommended for most labs.</p>
+    </div>
+
+    <div class="option-box">
+      <h4>3. Private repo + Pages <span class="price">GitHub Pro / Team · 5 min</span></h4>
+      <p>Repo itself is private (your lab only). Pages can still be public
+      or private (Pro+). Simplest model if collaborator names must stay
+      internal. Costs $4/user/month on Team.</p>
+    </div>
+
+    <div class="option-box">
+      <h4>4. Self-hosted on a lab server <span class="price">sysadmin time</span></h4>
+      <p>Required if institutional policy bars cloud storage of unpublished
+      research. Use Forgejo or Gitea + a static-site server (nginx/caddy).
+      Same markdown source, same scripts. The GitHub Actions become Forgejo
+      Actions or a cron job.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Path 1 — public Pages (you already did this)</h2>
+
+    <div class="deploy-step">
+      <div class="num">1</div>
+      <div>
+        <h3>Fork or clone this repo under your account</h3>
+        <p>Either <a href="https://github.com/Sayujr/Research-Projects-PM/fork">fork</a>
+        or clone and push to a new repo of your own.</p>
+      </div>
+    </div>
+
+    <div class="deploy-step">
+      <div class="num">2</div>
+      <div>
+        <h3>Enable GitHub Pages</h3>
+        <p>Repo <strong>Settings → Pages</strong>. Source: <code>Deploy from a branch</code>.
+        Branch: <code>main</code>. Folder: <code>/docs</code>. Save.</p>
+        <p>First build takes ~30s. URL appears at the top of the Pages page —
+        format <code>https://YOURUSER.github.io/YOURREPO/</code>.</p>
+      </div>
+    </div>
+
+    <div class="deploy-step">
+      <div class="num">3</div>
+      <div>
+        <h3>Update the bootstrap prompt URL</h3>
+        <p>Edit <code>docs/setup.html</code> — replace the repo URL in the
+        prompt block with yours. Rebuild and push; Pages auto-updates.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Path 2 — add Cloudflare Access</h2>
+
+    <p class="small muted mb-0">One-time setup, free for up to 50 users.</p>
+
+    <div class="deploy-step">
+      <div class="num">1</div>
+      <div>
+        <h3>Put the site behind a Cloudflare domain</h3>
+        <p>Options:</p>
+        <ul style="margin-left:18px;font-size:13px;">
+          <li><strong>Bring your own domain</strong> — e.g. <code>lab-pm.yourlab.edu</code>. Point a CNAME at <code>YOURUSER.github.io</code>. Verify in GitHub Pages settings.</li>
+          <li><strong>Use a Cloudflare-managed subdomain</strong> — free with any Cloudflare account.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="deploy-step">
+      <div class="num">2</div>
+      <div>
+        <h3>Create a Cloudflare Access application</h3>
+        <p><a href="https://one.dash.cloudflare.com/" target="_blank">Cloudflare dashboard</a>
+        → <strong>Zero Trust → Access → Applications → Add</strong>.</p>
+        <p>Type: <code>Self-hosted</code>. Domain: your Pages domain. Path: <code>/</code> (everything).</p>
+      </div>
+    </div>
+
+    <div class="deploy-step">
+      <div class="num">3</div>
+      <div>
+        <h3>Add an access policy</h3>
+        <p>Policy name: <code>Lab team</code>. Action: <code>Allow</code>.
+        Include rules:</p>
+        <ul style="margin-left:18px;font-size:13px;">
+          <li><strong>Emails</strong>: list each lab member's email</li>
+          <li><strong>Email domain</strong>: <code>yourlab.edu</code> (covers everyone at the institution)</li>
+        </ul>
+        <p>Authentication methods: One-time PIN via email is fine and requires no identity provider setup. Google SSO works if your lab uses Google Workspace.</p>
+      </div>
+    </div>
+
+    <div class="deploy-step">
+      <div class="num">4</div>
+      <div>
+        <h3>Test</h3>
+        <p>Open the URL in an incognito window. Cloudflare should challenge for
+        email → send PIN → enter PIN → site loads. Logged-in users stay
+        authenticated for the session duration you configured (default 24h).</p>
+        <div class="note">
+          If you also want the repo source to be private (not just the site),
+          you'll need GitHub Pro or Team. The site can live on a public Pages
+          while the repo is private — but be aware the generated
+          <code>data.json</code> contains whatever's in the markdown.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Post-deploy: multi-user scope</h2>
+    <p>If multiple lab members will access the same site, a per-user view helps them focus:</p>
+    <ul style="margin-left:18px;font-size:13px;">
+      <li>Append <code>?user=sara</code> to any page URL — the dashboard and Plan Board filter to projects she owns or collaborates on.</li>
+      <li>Bookmark the URL with the parameter and they land on "their view" every time.</li>
+    </ul>
+    <p class="small muted mt-8">
+      Filter is a lightweight UI convenience, not a permission boundary. If you need
+      real role-based access, layer a <code>CODEOWNERS</code> file + GitHub
+      branch protection on top.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Migrating from Notion / Asana / Todoist</h2>
+    <p>There isn't a one-click importer. The manual path takes 1–2 hours for a typical lab:</p>
+    <ol style="margin-left:18px;font-size:13px;">
+      <li>Export your existing tool to CSV / markdown (all three support this).</li>
+      <li>Project per project, paste contents into <code>projects/&lt;id&gt;.md</code> under the relevant section headings. Fill in the frontmatter (goal_model, deadline, collaborators).</li>
+      <li>Dump completed tasks into <code>progress/YYYY-MM.md</code> as one line each.</li>
+      <li>Run <code>/standup</code> in Claude. It'll point out what's missing.</li>
+    </ol>
+    <p class="small muted mt-8">
+      If you have a big migration and want a scripted importer for your specific source, open an issue with a sample export and we'll write one.
+    </p>
+  </div>
+</main>
+
+<footer>
+  You now own the data. The repo is portable — clone, back up, move to another host any time.
+</footer>
+
+<script src="app.js"></script>
+
+</body>
+</html>

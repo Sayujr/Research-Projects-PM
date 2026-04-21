@@ -1,0 +1,39 @@
+name: New checkpoint
+description: Add a checkpoint to a project (requires a Definition of Done)
+title: "[checkpoint] "
+labels: ["pm", "newcheckpoint"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A checkpoint without a Definition of Done is not a checkpoint.
+        Fill in DoD even if roughly — Claude can help refine later.
+  - type: input
+    id: project
+    attributes:
+      label: Project
+      placeholder: tnf-paper
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Checkpoint name
+      placeholder: "Methods drafted"
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Target date (YYYY-MM-DD)
+      placeholder: "2026-05-31"
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: "One line — how will you know this is finished?"
+      placeholder: "2000 words, all citations in"
+    validations:
+      required: true

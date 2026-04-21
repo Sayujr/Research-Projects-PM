@@ -1,0 +1,39 @@
+name: Log a cell-culture passage
+description: Record a passage (MCF-7, organoid, etc.). One-tap log from the lab.
+title: "[passage] "
+labels: ["pm", "logwin", "lab"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quick passage log. Auto-appends to `progress/YYYY-MM.md` with the
+        project's passage duration from `meta/task-history.json` if you leave it blank.
+  - type: input
+    id: project
+    attributes:
+      label: Project
+      placeholder: tnf-paper
+    validations:
+      required: true
+  - type: input
+    id: cell_line
+    attributes:
+      label: Cell line
+      placeholder: "MCF-7"
+    validations:
+      required: true
+  - type: input
+    id: passage_number
+    attributes:
+      label: Passage number
+      placeholder: "P13"
+  - type: input
+    id: duration
+    attributes:
+      label: Duration
+      placeholder: "45m"
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)
+      placeholder: "confluence looked good, no contamination"

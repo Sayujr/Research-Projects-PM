@@ -1,0 +1,35 @@
+name: New blocker
+description: Log something blocking progress on a project
+title: "[blocker] "
+labels: ["pm", "blocker"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Blockers appear in the project's `## Blockers` section and show up
+        on the dashboard until resolved. Repeated blockers (same one across
+        3+ standups) get flagged for escalation.
+  - type: input
+    id: project
+    attributes:
+      label: Project
+      placeholder: tnf-paper
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What's blocked, and what's needed?
+      placeholder: "Figure 4 v1 blocked on antibody reorder — ETA Apr 28."
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Who can unblock? (optional)
+      placeholder: "sara · external supplier · me"
+  - type: input
+    id: target_resolve
+    attributes:
+      label: Target resolve date (optional, YYYY-MM-DD)
+      placeholder: "2026-04-28"

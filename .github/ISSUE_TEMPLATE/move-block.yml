@@ -1,0 +1,40 @@
+name: Move a block
+description: Move a Plan Board block. Auto-runs the adjuster and proposes cascade options.
+title: "[move] "
+labels: ["pm", "move-block"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Moves a block on the current week's plan. The parser runs
+        `tools/planner/adjust.js` to compute cascade; the result is
+        posted as a comment on the issue. Reply with your choice of
+        **Compress** · **Accept slip** · **Cut scope** and the parser
+        finalises.
+  - type: input
+    id: task_id
+    attributes:
+      label: Task id (from week-plans)
+      description: "Exact id — e.g. t-methods-revise. Visible on the Plan Board on hover."
+      placeholder: "t-methods-revise"
+    validations:
+      required: true
+  - type: dropdown
+    id: target_day
+    attributes:
+      label: Target day
+      options:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+    validations:
+      required: true
+  - type: input
+    id: target_start
+    attributes:
+      label: Target start time (HH:MM, 24h)
+      placeholder: "10:00"
+    validations:
+      required: true

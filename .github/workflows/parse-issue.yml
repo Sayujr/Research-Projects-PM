@@ -1,0 +1,104 @@
+name: parse-issue
+
+# Fires when an issue is opened with the `pm` label.
+# Runs tools/parse-issue.js which does the markdown change, then this
+# workflow commits, pushes, comments on the issue, and closes it.
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: parse-issue-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  parse:
+    # Only run if the issue has the `pm` label.
+    if: contains(github.event.issue.labels.*.name, 'pm')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run parser
+        id: parse
+        env:
+          ISSUE_JSON: ${{ toJSON(github.event.issue) }}
+        run: |
+          set -e
+          node tools/parse-issue.js | tee /tmp/parse-output.txt
+          # Extract the machine-readable result tail line
+          grep '__PARSE_ISSUE_RESULT__=' /tmp/parse-output.txt \
+            | sed 's/^__PARSE_ISSUE_RESULT__=//' > /tmp/parse-result.json
+          cat /tmp/parse-result.json
+
+      - name: Commit and push if parser produced changes
+        id: commit
+        run: |
+          set -e
+          RESULT=$(cat /tmp/parse-result.json)
+          OK=$(echo "$RESULT" | node -e 'let d=""; process.stdin.on("data",c=>d+=c); process.stdin.on("end",()=>{console.log(JSON.parse(d).ok)})')
+          if [ "$OK" != "true" ]; then
+            echo "Parser reported ok=false; skipping commit."
+            exit 0
+          fi
+
+          if git diff --quiet; then
+            echo "No working-tree changes — parser may have been a no-op."
+            exit 0
+          fi
+
+          COMMIT_MSG=$(echo "$RESULT" | node -e 'let d=""; process.stdin.on("data",c=>d+=c); process.stdin.on("end",()=>{let j=JSON.parse(d); console.log(j.commitMsg || "pm: issue #${{ github.event.issue.number }}")}')
+
+          git config user.name  "research-pm-bot"
+          git config user.email "research-pm-bot@users.noreply.github.com"
+          git add -A
+          git commit -m "$COMMIT_MSG
+
+          Closes #${{ github.event.issue.number }}"
+          git push
+
+      - name: Comment + close issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let result = {};
+            try { result = JSON.parse(fs.readFileSync('/tmp/parse-result.json', 'utf8')); } catch {}
+
+            const humanText = (() => {
+              try { return fs.readFileSync('/tmp/parse-output.txt', 'utf8').split('\n---\n')[0].trim(); }
+              catch { return '(no output)'; }
+            })();
+
+            const body = result.ok
+              ? `✅ ${humanText}\n\nCommitted automatically. This issue will now close.`
+              : `⚠️ Parser could not apply this change.\n\n${humanText}\n\nEdit the issue to fix the inputs, then re-open (or submit a new one).`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+            if (result.ok) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                state: 'closed',
+              });
+            }

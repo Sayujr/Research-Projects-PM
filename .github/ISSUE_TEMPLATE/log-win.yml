@@ -1,0 +1,36 @@
+name: Log a win
+description: Quick log of progress — auto-commits to progress/YYYY-MM.md
+title: "[logwin] "
+labels: ["pm", "logwin"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quick progress log. One sentence is fine.
+  - type: input
+    id: project
+    attributes:
+      label: Project
+      description: "Project id (e.g. tnf-paper · organoid · r01-renewal)"
+      placeholder: tnf-paper
+    validations:
+      required: true
+  - type: input
+    id: note
+    attributes:
+      label: What shipped?
+      placeholder: "Methods section drafted — all citations in"
+    validations:
+      required: true
+  - type: input
+    id: duration
+    attributes:
+      label: Duration
+      description: "Optional but strongly preferred — feeds duration learning. Examples: 2h · 90m · 1h 45m"
+      placeholder: "2h"
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      description: "Leave blank for today. Format: YYYY-MM-DD"
+      placeholder: ""

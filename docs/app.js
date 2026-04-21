@@ -126,6 +126,8 @@ function resetAll() {
  * re-render if they want to.
  */
 async function hydrateFromLive() {
+  document.body.classList.add('loading-data');
+  updateDataSourceTag('…');
   try {
     const res = await fetch(LIVE_DATA_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -161,6 +163,7 @@ function updateDataSourceTag(label, generatedAt) {
     const d = new Date(generatedAt);
     tag.title = `Built ${d.toLocaleString()}`;
   }
+  document.body.classList.remove('loading-data');
 }
 
 function mergeLiveIntoState(live) {
@@ -198,3 +201,108 @@ let state = loadState();
 // Kick off hydration. Pages that care about the refresh can listen for
 // `state:hydrated` and call their render function again.
 hydrateFromLive();
+
+/* ---------- keyboard shortcuts ---------- */
+
+/**
+ * G + letter navigation (vim/GitHub-style).
+ * Press G then the letter within 1.2s to jump between pages.
+ *
+ *   G D   Dashboard
+ *   G P   Plan Board
+ *   G G   Gantt
+ *   G J   Project
+ *   G W   People
+ *   G R   Report
+ *   G S   Standup
+ *   G H   How it works (architecture)
+ *   G U   Setup
+ *   ?     Shortcut cheat sheet
+ */
+(function installShortcuts() {
+  const routes = {
+    d: 'index.html',
+    p: 'plan.html',
+    g: 'gantt.html',
+    j: 'project.html',
+    w: 'people.html',
+    r: 'report.html',
+    s: 'standup.html',
+    h: 'architecture.html',
+    u: 'setup.html',
+  };
+  let primed = false;
+  let primedAt = 0;
+  document.addEventListener('keydown', (e) => {
+    // Don't intercept typing into inputs / textareas / contenteditable.
+    const t = e.target;
+    if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (e.key === '?' && !primed) {
+      showShortcutHelp();
+      return;
+    }
+
+    if (primed && Date.now() - primedAt < 1200) {
+      const k = e.key.toLowerCase();
+      if (routes[k]) {
+        e.preventDefault();
+        window.location.href = routes[k];
+      }
+      primed = false;
+      return;
+    }
+
+    if (e.key === 'g' || e.key === 'G') {
+      primed = true;
+      primedAt = Date.now();
+      // Timeout — clear primed after 1.2s
+      setTimeout(() => { primed = false; }, 1200);
+    }
+  });
+})();
+
+function showShortcutHelp() {
+  if (document.getElementById('kb-help')) {
+    document.getElementById('kb-help').remove();
+    return;
+  }
+  const el = document.createElement('div');
+  el.id = 'kb-help';
+  el.style.cssText =
+    'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+    'background:#fff;border:1px solid #d1d5db;border-radius:10px;' +
+    'box-shadow:0 10px 40px rgba(0,0,0,0.15);padding:24px 28px;' +
+    'font-family:inherit;font-size:13px;z-index:1000;max-width:380px;';
+  el.innerHTML = `
+    <div style="font-weight:700;font-size:14px;margin-bottom:12px;color:#1a2332;">Keyboard shortcuts</div>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>D</kbd></td><td>Dashboard</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>P</kbd></td><td>Plan Board</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>G</kbd></td><td>Gantt</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>J</kbd></td><td>Project</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>W</kbd></td><td>People</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>R</kbd></td><td>Report</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>S</kbd></td><td>Standup</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>H</kbd></td><td>How it works</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>G</kbd> <kbd>U</kbd></td><td>Setup</td></tr>
+      <tr><td style="padding:4px 8px 4px 0;"><kbd>?</kbd></td><td>This menu</td></tr>
+    </table>
+    <div style="margin-top:14px;font-size:11px;color:#6b7280;text-align:right;">
+      <kbd>Esc</kbd> or click outside to close
+    </div>`;
+  document.body.appendChild(el);
+
+  const off = (ev) => {
+    if (ev.type === 'keydown' && ev.key !== 'Escape') return;
+    if (ev.type === 'click' && el.contains(ev.target)) return;
+    el.remove();
+    document.removeEventListener('keydown', off);
+    document.removeEventListener('click', off);
+  };
+  setTimeout(() => {
+    document.addEventListener('keydown', off);
+    document.addEventListener('click', off);
+  }, 50);
+}

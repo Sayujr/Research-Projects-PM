@@ -29,8 +29,18 @@
     <div class="subtitle">Tuesday, April 21, 2026 — week 17</div>
   </div>
 
-  <div class="banner">
+  <div class="banner" id="demo-banner">
     This is a demo preview. Data is illustrative. In a live install, a GitHub Action parses the markdown in the repo into <code>data.json</code> on every commit and refreshes this page.
+  </div>
+
+  <div class="empty-state" id="empty-state" hidden>
+    <h2>No projects yet</h2>
+    <p>Start the onboarding interview in your Claude Code session. One short conversation, eight light stages — covers your role, projects, team, calendar, and goals.</p>
+    <pre>/onboard</pre>
+    <div class="cta-row">
+      <a href="setup.html" class="chip">Setup guide</a>
+      <a href="architecture.html" class="chip">How it works</a>
+    </div>
   </div>
 
   <div class="kpis">
@@ -227,6 +237,26 @@
 <footer>
   research-pm · markdown + Claude + GitHub Pages · <a href="architecture.html">how it works</a>
 </footer>
+
+<script src="app.js"></script>
+<script>
+  /* Toggle empty state once live data hydrates. Static HTML stays the
+     happy-path view; empty card appears only for fresh installs. */
+  function refreshEmptyState() {
+    const live = window.__liveData;
+    const activeCount = (live && live.stats && typeof live.stats.activeProjects === 'number')
+      ? live.stats.activeProjects
+      : (state && state.project ? 1 : 0);
+    const isEmpty = activeCount === 0;
+    document.getElementById('empty-state').hidden = !isEmpty;
+    // Hide the rest of the dashboard when empty
+    document.querySelectorAll('main > .kpis, main > .grid-2').forEach((el) => {
+      el.style.display = isEmpty ? 'none' : '';
+    });
+  }
+  window.addEventListener('state:hydrated', refreshEmptyState);
+  document.addEventListener('DOMContentLoaded', refreshEmptyState);
+</script>
 
 </body>
 </html>

@@ -629,6 +629,37 @@ main {
   border-radius: 3px;
 }
 
+/* ---------- empty state ---------- */
+
+.empty-state {
+  background: var(--card);
+  border: 2px dashed var(--line-strong);
+  border-radius: var(--r);
+  padding: 48px 32px;
+  text-align: center;
+  margin: 24px 0;
+}
+.empty-state h2 {
+  font-size: 20px;
+  color: var(--navy);
+  margin-bottom: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 700;
+}
+.empty-state p { color: var(--muted); margin-bottom: 16px; font-size: 13px; }
+.empty-state pre {
+  display: inline-block;
+  background: var(--navy);
+  color: #e2e8f0;
+  padding: 12px 18px;
+  border-radius: var(--r-sm);
+  font-size: 12px;
+  text-align: left;
+  margin-top: 8px;
+}
+.empty-state .cta-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+
 /* ---------- footer ---------- */
 
 footer {

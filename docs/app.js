@@ -132,12 +132,12 @@ async function hydrateFromLive() {
     const res = await fetch(LIVE_DATA_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const live = await res.json();
+    window.__liveData = live;  // always expose for empty-state / debug
 
     // Merge strategy: if the user has a saved localStorage state, keep
     // it (they've been editing). Otherwise, take live data.
     const hasLocalEdits = localStorage.getItem(STORAGE_KEY) !== null;
     if (hasLocalEdits) {
-      window.__liveData = live;  // exposed for a manual "pull live" button
       return { source: 'local', state };
     }
     // Transform live shape into the shape app.js expects.

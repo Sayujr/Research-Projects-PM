@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-04-20T16:27:22.372Z",
-  "today": "2026-04-20",
+  "generated_at": "2026-04-21T15:10:44.907Z",
+  "today": "2026-04-21",
   "week": "2026-W17",
   "projects": [
     {
@@ -628,7 +628,7 @@
   },
   "stats": {
     "activeProjects": 3,
-    "writingStreak": 1,
+    "writingStreak": 0,
     "overdue": 0
   }
 }

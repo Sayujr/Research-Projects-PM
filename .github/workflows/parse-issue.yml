@@ -102,3 +102,11 @@ jobs:
                 state: 'closed',
               });
             }
+
+      - name: Slack alert for blockers
+        if: contains(github.event.issue.labels.*.name, 'blocker')
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          MSG=":warning: New blocker filed — <${{ github.event.issue.html_url }}|#${{ github.event.issue.number }} ${{ github.event.issue.title }}>"
+          node tools/notify-slack.js "$MSG"

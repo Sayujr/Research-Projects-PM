@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Integrations — research-pm</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .int-card { margin-bottom: 24px; }
+  .int-card .status-pill {
+    display: inline-block; padding: 2px 8px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--teal-soft); color: var(--teal);
+    margin-left: 8px; vertical-align: middle;
+  }
+  .int-card .status-pill.configured { background: #dcfce7; color: #166534; }
+  .int-card .status-pill.optional   { background: #f1f5f9; color: var(--muted); }
+  .steps ol { margin-left: 20px; margin-top: 8px; }
+  .steps li { margin-bottom: 10px; font-size: 13px; line-height: 1.5; }
+  .steps code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-size: 11.5px; }
+  .secret-table {
+    width: 100%; border-collapse: collapse; margin-top: 12px;
+    font-size: 12px;
+  }
+  .secret-table th, .secret-table td {
+    padding: 6px 10px; text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .secret-table th {
+    background: var(--teal-soft); color: var(--teal);
+    font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+  }
+  .secret-table code { font-size: 11px; }
+  .secret-table .var { color: var(--navy); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="index.html">research-pm</a>
+  <a href="index.html">Dashboard</a>
+  <a href="plan.html">Plan Board</a>
+  <a href="gantt.html">Gantt</a>
+  <a href="project.html">Project</a>
+  <a href="people.html">People</a>
+  <a href="report.html">Report</a>
+  <a href="standup.html">Standup</a>
+  <a href="architecture.html">How it works</a>
+  <a href="setup.html">Setup</a>
+  <span class="spacer"></span>
+  <span class="demo-tag">DEMO</span>
+</nav>
+
+<main>
+  <div class="page-head">
+    <h1>Integrations</h1>
+    <div class="subtitle">Email digests · Slack alerts · Google + Outlook calendar sync. All optional — the tool works without any of them.</div>
+  </div>
+
+  <div class="banner">
+    Every integration is off by default. It turns on when the relevant secret is set in GitHub repo settings. Skip any you don't need.
+  </div>
+
+  <!-- Email digest -->
+  <div class="card int-card">
+    <h2>Weekly email digest <span class="status-pill optional">optional · 10 min</span></h2>
+    <p>Friday 17:00 UTC: <code>tools/send-digest.js</code> reads the week's progress log, builds an HTML email of shipped items + closed checkpoints + streak, sends via Resend.</p>
+
+    <div class="steps">
+      <ol>
+        <li>Sign up at <a href="https://resend.com" target="_blank">resend.com</a> (free tier: 3000 emails/month, 100/day).</li>
+        <li>Verify a sending domain (their docs walk through DNS records). Without a verified domain, you can only send from <code>onboarding@resend.dev</code> to your own inbox — fine for a pilot.</li>
+        <li>Create an API key. Copy it.</li>
+        <li>In the repo: <strong>Settings → Secrets and variables → Actions</strong>. Add the values below.</li>
+        <li>Trigger a dry-run: <strong>Actions → friday-digest → Run workflow</strong>, check "Dry run" on. It'll log the payload without sending.</li>
+      </ol>
+    </div>
+
+    <table class="secret-table">
+      <tr><th>Name</th><th>Type</th><th>Value</th></tr>
+      <tr><td class="var">RESEND_API_KEY</td><td>Secret</td><td><code>re_xxxxxxxxxxxxxxxx</code></td></tr>
+      <tr><td class="var">DIGEST_FROM</td><td>Variable</td><td><code>research-pm &lt;noreply@yourdomain.com&gt;</code></td></tr>
+      <tr><td class="var">DIGEST_TO</td><td>Variable</td><td><code>your-email@example.com, pi@lab.edu</code></td></tr>
+      <tr><td class="var">DIGEST_CC</td><td>Variable (opt)</td><td><code>collaborator@...</code></td></tr>
+    </table>
+
+    <p class="small muted mt-16">
+      Source: <code>tools/send-digest.js</code> · Schedule:
+      <code>.github/workflows/friday-digest.yml</code>. Substitute SES or
+      Postmark — the script is ~100 lines, easy to port.
+    </p>
+  </div>
+
+  <!-- Slack -->
+  <div class="card int-card">
+    <h2>Slack alerts <span class="status-pill optional">optional · 5 min</span></h2>
+    <p>Posts to a team channel when a blocker is filed (via the New Blocker issue form). Can be extended to other events easily.</p>
+
+    <div class="steps">
+      <ol>
+        <li>In Slack: <strong>Apps → Incoming Webhooks → Add to Slack</strong>. Pick the channel (typically <code>#lab-blockers</code>).</li>
+        <li>Copy the webhook URL.</li>
+        <li>Repo <strong>Settings → Secrets → Actions</strong> → add <code class="var">SLACK_WEBHOOK_URL</code>.</li>
+        <li>Test: file a blocker via the website quick-log or <a href="https://github.com/Sayujr/Research-Projects-PM/issues/new?template=new-blocker.yml">New Blocker form</a>. Within 10 seconds the message should land in your channel.</li>
+      </ol>
+    </div>
+
+    <table class="secret-table">
+      <tr><th>Name</th><th>Type</th><th>Value</th></tr>
+      <tr><td class="var">SLACK_WEBHOOK_URL</td><td>Secret</td><td><code>https://hooks.slack.com/services/T.../B.../...</code></td></tr>
+    </table>
+
+    <p class="small muted mt-16">
+      Source: <code>tools/notify-slack.js</code>. Called from
+      <code>.github/workflows/parse-issue.yml</code> when the
+      <code>blocker</code> label is present. Skips silently if the secret
+      isn't set.
+    </p>
+  </div>
+
+  <!-- Google Calendar -->
+  <div class="card int-card">
+    <h2>Google Calendar sync <span class="status-pill optional">optional · 20 min</span></h2>
+    <p>Nightly at 06:00 UTC: <code>tools/calendar-sync.js</code> reads your
+    Google calendars, writes <code>calendar/YYYY-MM.md</code>, commits back.
+    The standup command then sees your real schedule when deciding today's
+    calendar shape.</p>
+
+    <div class="steps">
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>. Create a new project (name it "research-pm" — one-time).</li>
+        <li><strong>APIs &amp; Services → Enable APIs</strong> → enable <code>Google Calendar API</code>.</li>
+        <li><strong>OAuth consent screen</strong> → External → fill app name, your email, scopes:
+          <code>.../auth/calendar.readonly</code>,
+          <code>.../auth/calendar.events</code>. Add yourself as a test user.</li>
+        <li><strong>Credentials → Create → OAuth client ID → Desktop app</strong>. Download the JSON. Note <code>client_id</code> and <code>client_secret</code>.</li>
+        <li>One-time locally: run the bootstrap script to get a refresh token.
+          <pre style="background:#f1f5f9;padding:10px 14px;border-radius:4px;font-size:11px;margin-top:6px;">node tools/oauth-bootstrap-google.js</pre>
+          Follow the prompt (opens a browser), grants consent, prints a refresh token.</li>
+        <li>Repo <strong>Settings → Secrets &amp; Variables → Actions</strong>:
+          <ul style="margin-left: 18px; margin-top: 4px;">
+            <li>Add secrets: <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, <code>GOOGLE_REFRESH_TOKEN</code></li>
+            <li>Add variable: <code>GOOGLE_CALENDAR_IDS</code> (comma-separated — <code>primary</code> or specific calendar IDs)</li>
+          </ul>
+        </li>
+        <li>Test: <strong>Actions → nightly-sync → Run workflow</strong>, with dry-run on. Should log this month's events.</li>
+      </ol>
+    </div>
+
+    <table class="secret-table">
+      <tr><th>Name</th><th>Type</th><th>Value</th></tr>
+      <tr><td class="var">GOOGLE_CLIENT_ID</td><td>Secret</td><td>from OAuth credentials</td></tr>
+      <tr><td class="var">GOOGLE_CLIENT_SECRET</td><td>Secret</td><td>from OAuth credentials</td></tr>
+      <tr><td class="var">GOOGLE_REFRESH_TOKEN</td><td>Secret</td><td>from bootstrap script</td></tr>
+      <tr><td class="var">GOOGLE_CALENDAR_IDS</td><td>Variable</td><td><code>primary</code> or <code>primary,work@company.com</code></td></tr>
+    </table>
+
+    <p class="small muted mt-16">
+      Source: <code>tools/calendar-sync.js</code> · Schedule:
+      <code>.github/workflows/nightly-sync.yml</code>. Writes are silently
+      skipped if the secret isn't configured, so it's safe to leave the
+      workflow file committed.
+    </p>
+  </div>
+
+  <!-- Outlook -->
+  <div class="card int-card">
+    <h2>Outlook / M365 sync <span class="status-pill optional">optional · not yet implemented</span></h2>
+    <p>Same pattern as Google, using Microsoft Graph. The script hook exists
+    in <code>calendar-sync.js</code>; the API call implementation is Phase 4.5.</p>
+
+    <p class="small muted">
+      If Outlook is your primary calendar, open a feature-request issue and
+      we'll prioritise it. Temporary workaround: share your Outlook calendar
+      with a Google account, point <code>GOOGLE_CALENDAR_IDS</code> at it.
+    </p>
+  </div>
+
+  <!-- Writing back to calendars -->
+  <div class="card int-card">
+    <h2>Writing back to your calendar <span class="status-pill optional">planned · Phase 4.5</span></h2>
+    <p>Phase 1 is <em>read-only</em> sync — the site and Claude see your calendar but don't modify it. Phase 4.5 adds write-back:</p>
+    <ul style="margin-left: 18px; font-size: 13px; margin-bottom: 8px;">
+      <li>When you approve the Monday <code>/week-plan</code>, Claude creates events titled <em>"Writing — TNF methods"</em> on your work calendar, so colleagues see your protected blocks.</li>
+      <li>Scope will default to the work calendar only; personal stays read-only for safety.</li>
+    </ul>
+    <p class="small muted">
+      Requires the calendar OAuth scope upgrade to <code>.../auth/calendar.events</code> (writable) — already included in the setup above in anticipation.
+    </p>
+  </div>
+
+  <!-- Summary table -->
+  <div class="card">
+    <h2>At a glance</h2>
+    <table class="flow-table">
+      <tr><th>Integration</th><th>Effort</th><th>What it gives you</th></tr>
+      <tr><td>Email digest</td><td>10 min</td><td>Friday summary to your inbox (and optionally PI)</td></tr>
+      <tr><td>Slack alerts</td><td>5 min</td><td>Team channel gets pinged on new blockers</td></tr>
+      <tr><td>Google Calendar (read)</td><td>20 min</td><td>Claude sees your schedule when planning</td></tr>
+      <tr><td>Outlook (read)</td><td>—</td><td>Coming in Phase 4.5</td></tr>
+      <tr><td>Calendar write-back</td><td>—</td><td>Coming in Phase 4.5 — protected blocks as calendar events</td></tr>
+    </table>
+  </div>
+</main>
+
+<footer>
+  None of these are required. The core flow (markdown + Claude) works without any integration configured.
+</footer>
+
+<script src="app.js"></script>
+
+</body>
+</html>

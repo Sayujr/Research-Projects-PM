@@ -1,0 +1,36 @@
+name: friday-digest
+
+# Sends the weekly digest email every Friday at 17:00 UTC.
+# Also available on-demand via workflow_dispatch.
+
+on:
+  schedule:
+    # Minute Hour  DayOfMonth Month DayOfWeek  (UTC)
+    - cron: "0 17 * * 5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (log payload, don't send)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+
+      - name: Send digest
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          DIGEST_FROM:    ${{ vars.DIGEST_FROM }}
+          DIGEST_TO:      ${{ vars.DIGEST_TO }}
+          DIGEST_CC:      ${{ vars.DIGEST_CC }}
+          DIGEST_DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
+        run: node tools/send-digest.js

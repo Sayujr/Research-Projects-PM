@@ -1,0 +1,69 @@
+name: nightly-sync
+
+# Nightly calendar sync at 06:00 UTC. Pulls Google Calendar (and
+# Outlook when configured) into calendar/YYYY-MM.md, commits the
+# change so the website reflects her actual schedule.
+#
+# Silently skips if OAuth credentials aren't set as secrets — useful
+# for demo repos where the integration is aspirational.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Log events but don't commit"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+
+      - name: Skip if no credentials configured
+        id: gate
+        run: |
+          if [ -z "${{ secrets.GOOGLE_REFRESH_TOKEN }}" ] && [ -z "${{ secrets.OUTLOOK_REFRESH_TOKEN }}" ]; then
+            echo "No calendar OAuth secrets configured — skipping."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run calendar sync
+        if: steps.gate.outputs.skip != 'true'
+        env:
+          GOOGLE_CLIENT_ID:      ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET:  ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REFRESH_TOKEN:  ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+          GOOGLE_CALENDAR_IDS:   ${{ vars.GOOGLE_CALENDAR_IDS }}
+          OUTLOOK_CLIENT_ID:     ${{ secrets.OUTLOOK_CLIENT_ID }}
+          OUTLOOK_CLIENT_SECRET: ${{ secrets.OUTLOOK_CLIENT_SECRET }}
+          OUTLOOK_REFRESH_TOKEN: ${{ secrets.OUTLOOK_REFRESH_TOKEN }}
+          CALENDAR_SYNC_DRY_RUN: ${{ inputs.dry_run == true && '1' || '' }}
+        run: node tools/calendar-sync.js
+
+      - name: Commit synced calendar if changed
+        if: steps.gate.outputs.skip != 'true' && inputs.dry_run != true
+        run: |
+          if git diff --quiet calendar/; then
+            echo "No calendar changes."
+            exit 0
+          fi
+          git config user.name  "research-pm-bot"
+          git config user.email "research-pm-bot@users.noreply.github.com"
+          git add calendar/
+          git commit -m "calendar: nightly sync [skip ci]"
+          git push

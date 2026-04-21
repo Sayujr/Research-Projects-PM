@@ -13,6 +13,8 @@
 
 const fs = require("fs");
 const path = require("path");
+const matter = require("gray-matter");
+const { adjust } = require("./planner/adjust");
 
 const REPO = path.resolve(__dirname, "..");
 
@@ -243,7 +245,6 @@ function handleNewBlocker() {
 }
 
 function handleMoveBlock() {
-  // Two-phase: for now, just echo the move + note the adjuster isn't wired yet.
   const taskId = (fields.task_id_from_week_plans || "").trim();
   const day = (fields.target_day || "").trim();
   const start = (fields.target_start_time_hh_mm_24h || "").trim();
@@ -252,16 +253,149 @@ function handleMoveBlock() {
     return result(false, "Missing task_id, target_day, or target_start.");
   }
 
+  // Find the current week plan
+  const week = currentWeek();
+  const weekFile = `week-plans/${week}.md`;
+  const absWeek = path.join(REPO, weekFile);
+  if (!fs.existsSync(absWeek)) {
+    return result(false, `No week-plan file for ${week}. Run /week-plan in Claude first.`);
+  }
+
+  const { data: plan } = matter(fs.readFileSync(absWeek, "utf8"));
+  if (!plan.blocks) {
+    return result(false, `${weekFile} has no blocks[] in frontmatter.`);
+  }
+
+  // Build tasks[] from top_5 + project files
+  const tasks = (plan.top_5 || []).map((t) => ({
+    id: t.id,
+    title: t.title,
+    checkpoint: t.checkpoint,
+    block_type: inferBlockType(t, plan),
+    preferred_block: inferBlockType(t, plan),
+  }));
+
+  // Build checkpoints[] from all projects
+  const checkpoints = collectCheckpoints();
+
+  const weekStart = weekStartDate(week);
+  const r = adjust({
+    blocks: plan.blocks,
+    tasks,
+    checkpoints,
+    move: { task_id: taskId, day, start },
+    options: { weekStart },
+  });
+
+  if (!r.ok) {
+    return result(false, `Move rejected: ${r.reason}`);
+  }
+
+  // If no overshoot, auto-apply. Otherwise, return a preview.
+  if (r.approvalRequired) {
+    const preview = formatCascadePreview(r);
+    return result(
+      true,
+      "Cascade preview (needs your approval before commit):\n\n" + preview +
+        "\n\n**Approve?** Reply to this issue with `accept`, `compress`, or `cut` — or dismiss by closing.\n\n" +
+        "(Auto-commit is paused because this move pushes at least one checkpoint past its DoD.)",
+      [],
+      null
+    );
+  }
+
+  // Safe move — commit. Use gray-matter's stringifier (bundles js-yaml).
+  const existing = fs.readFileSync(absWeek, "utf8");
+  const { content } = matter(existing);
+  const updated = matter.stringify(content, { ...plan, blocks: r.newBlocks });
+  fs.writeFileSync(absWeek, updated);
+
   return result(
     true,
-    `Move request recorded: \`${taskId}\` → ${day} ${start}.\n\n` +
-      `Note: the real cascade adjuster (tools/planner/adjust.js) isn't wired to ` +
-      `this workflow yet. For now, you or Claude should run the move via ` +
-      `the \`/move\` slash command in Claude chat.`,
-    [],
-    null
+    `Moved \`${taskId}\` to ${day} ${start}.\n\n` +
+      (r.cascade.length
+        ? "Cascaded blocks:\n" +
+          r.cascade.map((c) => `- \`${c.task_id}\` · ${c.from.day} ${c.from.start} → ${c.to.day} ${c.to.start}`).join("\n")
+        : "No cascade needed."),
+    [weekFile],
+    `move: ${taskId} → ${day} ${start}`
   );
 }
+
+function currentWeek() {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  const target = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const dayNum = target.getUTCDay() || 7;
+  target.setUTCDate(target.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(target.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
+  return `${target.getUTCFullYear()}-W${String(weekNum).padStart(2, "0")}`;
+}
+
+function weekStartDate(weekId) {
+  const m = weekId.match(/^(\d{4})-W(\d{2})$/);
+  if (!m) return null;
+  const year = parseInt(m[1], 10);
+  const week = parseInt(m[2], 10);
+  // ISO week: Monday is day 1. Find Jan 4 of year (always in week 1).
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Dow = jan4.getUTCDay() || 7;
+  const week1Mon = new Date(jan4);
+  week1Mon.setUTCDate(jan4.getUTCDate() - jan4Dow + 1);
+  const target = new Date(week1Mon);
+  target.setUTCDate(week1Mon.getUTCDate() + (week - 1) * 7);
+  return target.toISOString().slice(0, 10);
+}
+
+function inferBlockType(task, _plan) {
+  const n = (task.title || "").toLowerCase();
+  if (/draft|revise|polish|outline|section|figure/.test(n)) return "deep";
+  if (/passage|media|dose|assay|culture|lab/.test(n)) return "lab";
+  if (/admin|email|order/.test(n)) return "light";
+  if (/1:1|meeting|retro|digest/.test(n)) return "meeting";
+  return "deep";
+}
+
+function collectCheckpoints() {
+  const out = [];
+  const projectsDir = path.join(REPO, "projects");
+  if (!fs.existsSync(projectsDir)) return out;
+  for (const file of fs.readdirSync(projectsDir)) {
+    if (!file.endsWith(".md") || file.startsWith("_")) continue;
+    const src = fs.readFileSync(path.join(projectsDir, file), "utf8");
+    const { content } = matter(src);
+    const sectionMatch = content.match(/##\s+Checkpoints\s*\n([\s\S]*?)(?:\n##|\s*$)/);
+    if (!sectionMatch) continue;
+    for (const line of sectionMatch[1].split("\n")) {
+      const m = line.trim().match(/^-\s*\[[ x]\]\s*\*\*(.+?)\*\*\s*—\s*(\d{4}-\d{2}-\d{2})/);
+      if (m) out.push({ name: m[1].trim(), date: m[2], project: file.replace(".md", "") });
+    }
+  }
+  return out;
+}
+
+function formatCascadePreview(r) {
+  const lines = [];
+  lines.push("**Cascade:**");
+  for (const c of r.cascade) {
+    lines.push(`- \`${c.task_id}\`: ${c.from.day} ${c.from.start} → ${c.to.day} ${c.to.start}`);
+  }
+  if (r.checkpointImpacts.length) {
+    lines.push("\n**Checkpoint impact:**");
+    for (const ci of r.checkpointImpacts) {
+      lines.push(
+        `- *${ci.checkpoint}* (DoD ${ci.cp_date}) — task ${ci.task} now on ${ci.block_date} (${ci.overshoot_days}d overshoot)`
+      );
+    }
+  }
+  if (r.warnings.length) {
+    lines.push("\n**Warnings:**");
+    for (const w of r.warnings) lines.push(`- ${w}`);
+  }
+  return lines.join("\n");
+}
+
 
 function updateTaskHistory(note, minutes) {
   const file = "meta/task-history.json";
